@@ -1,0 +1,19 @@
+#ifndef _DIDAQ_H
+#define _DIDAQ_H
+
+#define DIDAQ_NUM_CHANNELS 24
+
+/** didaq api */
+typedef struct didaq_dev didaq_dev_t;
+
+didaq_dev_t * didaq_open( const char * spi_device, 
+    const char * spi_en_gpio_label,  const char * trig_ready_gpio_label,
+    uint32_t spi_speed);
+
+int didaq_close (didaq_dev_t * dev);
+
+
+
+
+
+#endif
