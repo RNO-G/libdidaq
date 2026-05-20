@@ -64,9 +64,9 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
     }
   }
 
-  //set up for 16 bits per word and mode 0. These shouldn't fail. Probably.
+  //set up for 8 bits per word for now (to do 16 eventually) and mode 0. These shouldn't fail. Probably.
   uint8_t mode =0 ;
-  uint8_t bpw = 16;
+  uint8_t bpw = 8;
   ioctl(spi_fd, SPI_IOC_WR_MODE, &mode);
   ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bpw);
 

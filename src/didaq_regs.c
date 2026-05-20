@@ -19,12 +19,12 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
   }
 
   size_t idx = dev->nxfers++;
-  dev->tx_bufs[idx].addr[1] = addr & 0xff;
-  dev->tx_bufs[idx].addr[0]  = addr >> 1;
-  dev->tx_bufs[idx].payload[0] = (payload & 0xff000000) >> 24;
-  dev->tx_bufs[idx].payload[1] = (payload & 0xff0000) >> 16;
-  dev->tx_bufs[idx].payload[2] = (payload & 0xff00) >> 8;
-  dev->tx_bufs[idx].payload[3] = (payload & 0xff);
+  dev->tx_bufs[idx].payload[1] = addr & 0xff;
+  dev->tx_bufs[idx].payload[0]  = addr >> 1;
+  dev->tx_bufs[idx].payload[2] = (payload & 0xff000000) >> 24;
+  dev->tx_bufs[idx].payload[3] = (payload & 0xff0000) >> 16;
+  dev->tx_bufs[idx].payload[4] = (payload & 0xff00) >> 8;
+  dev->tx_bufs[idx].payload[5] = (payload & 0xff);
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];
   dev->xfers[idx].rx_buf = 0;
   dev->xfers[idx].len = 6;
@@ -55,9 +55,9 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
   size_t idx = dev->nxfers++;
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];
 
-  dev->tx_bufs[idx].addr[1] = addr & 0xff;
-  dev->tx_bufs[idx].addr[0]  = addr >> 1;
-  dev->tx_bufs[idx].addr[0]  |= 0x80;
+  dev->tx_bufs[idx].payload[1] = addr & 0xff;
+  dev->tx_bufs[idx].payload[0]  = addr >> 1;
+  dev->tx_bufs[idx].payload[0]  |= 0x80;
 
   dev->rx_bufs[idx].orig_len = len;
   dev->rx_bufs[idx].orig_dest = dest;
@@ -160,7 +160,7 @@ int didaq_complete(didaq_dev_t * dev)
       //we need to copy out to external buffer
       if (dev->rx_bufs[ixfer].orig_dest !=  (char*) dev->xfers[ixfer].rx_buf)
       {
-        memcpy(dev->rx_bufs[ixfer].orig_dest, dev->rx_bufs[ixfer].payload, dev->xfers[ixfer].len);
+        memcpy(dev->rx_bufs[ixfer].orig_dest, dev->rx_bufs[ixfer].payload+2, dev->rx_bufs[ixfer].orig_len);
       }
 
       uint32_t elem_len = dev->rx_bufs[ixfer].elem_len;

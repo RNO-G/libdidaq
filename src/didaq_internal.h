@@ -11,8 +11,7 @@
 
 typedef struct didaq_txn
 {
-  uint8_t addr[2]; //MSB , LSB
-  uint8_t payload[4];
+  uint8_t payload[6];
   uint32_t orig_len;
   uint32_t elem_len;
   char * orig_dest;
