@@ -11,15 +11,7 @@
 
 typedef struct didaq_txn
 {
-  union
-  {
-    struct
-    {
-      uint16_t read : 1;
-      uint16_t addr  : 15;
-    } split;
-    uint16_t unified;
-  } addr;
+  uint8_t addr[2]; //MSB , LSB
   uint8_t payload[4];
   uint32_t orig_len;
   uint32_t elem_len;
