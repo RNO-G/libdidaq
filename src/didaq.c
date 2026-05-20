@@ -10,16 +10,17 @@
 
 
 
-didaq_dev_t * didaq_open( const char * spi_device,
-    const char * spi_en_gpio_label,  const char * trig_ready_gpio_label,
-    uint32_t spi_speed)
+didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 {
+  if (!setup || !setup->spi_device || !*setup->spi_device) return NULL;
   didaq_dev_t * dev = 0;
 
-  int spi_fd = open(spi_device, O_RDWR);
+  FILE * ferr = setup->err_out ?: stderr;
+
+  int spi_fd = open(setup->spi_device, O_RDWR);
   if (spi_fd < 0)
   {
-    fprintf(stderr, "Couldn't open %s\n", spi_device);
+    fprintf(ferr, "Couldn't open %s\n", setup->spi_device);
     return NULL;
   }
 
@@ -27,37 +28,40 @@ didaq_dev_t * didaq_open( const char * spi_device,
   int locked_spi = flock(spi_fd, LOCK_EX | LOCK_NB);
   if (locked_spi < 0)
   {
-    fprintf(stderr,"Could not get exclusive access to %s\n", spi_device);
+    fprintf(ferr,"Could not get exclusive access to %s\n", setup->spi_device);
     close(spi_fd);
     return NULL;
   }
 
   gpios_line_t spi_en = {0};
   gpios_line_t trig_gpio = {0};
-  if (spi_en_gpio_label)
+  if (setup->spi_en_gpio_label)
   {
-    int ret = gpios_get_line_by_label(spi_en_gpio_label, &spi_en, GPIOS_OUTPUT | GPIOS_ACTIVE_LOW);
+    int ret = gpios_get_line_by_label(setup->spi_en_gpio_label, &spi_en, GPIOS_OUTPUT | (setup->spi_en_active_high ? 0 : GPIOS_ACTIVE_LOW));
     if (ret)
     {
-      fprintf(stderr, "Could't load GPIO with label %s. Probably not gonna work.\n", spi_en_gpio_label);
+      fprintf(ferr, "Could't load GPIO with label %s. Probably not gonna work.\n", setup->spi_en_gpio_label);
     }
   }
 
-  if ( trig_ready_gpio_label)
+  if ( setup->trig_ready_gpio_label)
   {
-    int ret = gpios_get_line_by_label(trig_ready_gpio_label, &trig_gpio, GPIOS_POLL_RISING | GPIOS_POLL_CLOCK_REALTIME);
+    int ret = gpios_get_line_by_label(setup->trig_ready_gpio_label, &trig_gpio, ( setup->trig_ready_active_low ? GPIOS_ACTIVE_LOW : 0)  | GPIOS_POLL_RISING | GPIOS_POLL_CLOCK_REALTIME);
     if (ret)
     {
-      fprintf(stderr, "Could't load GPIO with label %s. Will have to poll register.\n", trig_ready_gpio_label);
+      fprintf(ferr, "Could't load GPIO with label %s. Will have to poll register.\n", setup->trig_ready_gpio_label);
     }
   }
 
 
-  int speed_ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
-
-  if (speed_ret < 0)
+  if (setup->spi_speed)
   {
-    fprintf(stderr,"Trouble setting speed to  %d: (%d, %s)\n", spi_speed, errno, strerror(errno));
+    int speed_ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &setup->spi_speed);
+
+    if (speed_ret < 0)
+    {
+      fprintf(ferr,"Trouble setting speed to  %d: (%d, %s)\n", setup->spi_speed, errno, strerror(errno));
+    }
   }
 
   //set up for 16 bits per word and mode 0. These shouldn't fail. Probably.
@@ -70,6 +74,7 @@ didaq_dev_t * didaq_open( const char * spi_device,
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
   dev->spi_fd = spi_fd;
+  memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
   memcpy(&dev->trig_rdy,  &trig_gpio, sizeof(trig_gpio));
 

@@ -27,6 +27,7 @@ typedef struct didaq_txn
 
 struct didaq_dev
 {
+  didaq_setup_t setup;
   int spi_fd;
 
   gpios_line_t spi_en;
