@@ -9,8 +9,15 @@
 
 typedef struct didaq_txn
 {
-  uint16_t write : 1;
-  uint16_t addr  : 15;
+  union
+  {
+    struct
+    {
+      uint16_t write : 1;
+      uint16_t addr  : 15;
+    } split;
+    uint16_t unified;
+  } addr;
   uint8_t payload[4];
   uint32_t orig_len;
   uint32_t elem_len;
