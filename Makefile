@@ -16,15 +16,16 @@ VER_REV=1
 VERSIONED_LIB = $(LIB).$(VER_MAJOR).$(VER_MINOR).$(VER_REV)
 NAMED_LIB = $(LIB).$(VER_MAJOR)
 
-SRC=src/didaq_regs.c
-OBJ = $(SRC:.c=.o)
+SRC=src/didaq_regs.c src/didaq.c
+EXAMPLES=examples/didaq-dump
+OBJS = $(SRC:.c=.o)
 INC_PUBLIC=src/didaq.h src/didaq_regs.h
 INC_PRIVATE=src/didaq_internal.h src/didaq_helpers.h
 INCLUDES=$(INC_PUBLIC) $(INC_PRIVATE)
 
-.PHONY: all clean examples
+.PHONY: all clean 
 
-all: $(LIB)
+all: $(LIB) $(EXAMPLES)
 
 src/didaq.h: src/didaq.h.in
 	sed $< -e "s/DIDAQ_VERSION_MAJOR @@/DIDAQ_VERSION_MAJOR $(VER_MAJOR)/" -e "s/DIDAQ_VERSION_MINOR @@/DIDAQ_VERSION_MINOR $(VER_MINOR)/" -e "s/DIDAQ_VERSION_REV @@/DIDAQ_VERSION_REV $(VER_REV)/" > $@
@@ -32,8 +33,9 @@ src/didaq.h: src/didaq.h.in
 src/%.o: src/%.c $(INCLUDES)
 	$(CC) $(CFLAGS) -fPIC -Isrc -c $< -o $@
 
+
 examples/%: examples/%.c $(LIB)
-	$(CC) $(CFLAGS)  -Iinclude $< -o $@ -L. -lgpios $(LDFLAGS)
+	$(CC) $(CFLAGS)  -Isrc $< -o $@ -L. -ldidaq -lgpios $(LDFLAGS)
 
 $(LIB): $(NAMED_LIB)
 	ln -sf  $< $@
@@ -41,7 +43,7 @@ $(LIB): $(NAMED_LIB)
 $(NAMED_LIB): $(VERSIONED_LIB)
 	ln -sf  $< $@
 
-$(VERSIONED_LIB): $(OBJ)
+$(VERSIONED_LIB): $(OBJS)
 	 $(CC) -shared $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
 
 install: $(LIB) examples
@@ -52,11 +54,11 @@ install: $(LIB) examples
 	install -d $(DESTDIR)$(PREFIX)/$(INCDIR)
 	install -m 0644 $(INC_PUBLIC) $(DESTDIR)$(PREFIX)/$(INCDIR)/
 	install -d $(DESTDIR)$(PREFIX)/$(BINDIR)
-#	install -m 0755 $(EXAMPLES) $(DESTDIR)$(PREFIX)/$(BINDIR)/
+	install -m 0755 $(EXAMPLES) $(DESTDIR)$(PREFIX)/$(BINDIR)/
 
 
 
 clean:
-	rm -f $(LIB) $(OBJS) $(NAMED_LIB) $(VERSIONED_LIB)
+	rm -f $(LIB) $(OBJS) $(NAMED_LIB) $(VERSIONED_LIB) $(EXAMPLES)
 
 
