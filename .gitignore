@@ -2,3 +2,6 @@
 *.so
 *.so.*
 src/didaq.h
+examples/*
+!*.c
+
