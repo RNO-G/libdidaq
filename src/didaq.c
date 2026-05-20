@@ -89,6 +89,8 @@ didaq_dev_t * didaq_open( const char * spi_device,
 
   // enable spi enable
   gpios_set_value(&dev->spi_en, true);
+  didaq_read_REVISION(dev, &dev->revision);
+  didaq_read_BOARD_ID(dev, &dev->board_id);
 
   return dev;
 }
