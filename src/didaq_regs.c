@@ -19,7 +19,7 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
   }
 
   size_t idx = dev->nxfers++;
-  dev->tx_bufs[idx].addr.split.write = 1;
+  dev->tx_bufs[idx].addr.split.read = 0;
   dev->tx_bufs[idx].addr.split.addr = addr;
 
   dev->tx_bufs[idx].addr.unified = htobe16(dev->tx_bufs[idx].addr.unified);
@@ -56,7 +56,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
   }
 
   size_t idx = dev->nxfers++;
-  dev->tx_bufs[idx].addr.split.write = 0;
+  dev->tx_bufs[idx].addr.split.read = 1;
   dev->tx_bufs[idx].addr.split.addr = addr;
   dev->tx_bufs[idx].addr.unified = htobe16(dev->tx_bufs[idx].addr.unified);
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];

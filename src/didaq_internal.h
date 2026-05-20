@@ -15,7 +15,7 @@ typedef struct didaq_txn
   {
     struct
     {
-      uint16_t write : 1;
+      uint16_t read : 1;
       uint16_t addr  : 15;
     } split;
     uint16_t unified;
