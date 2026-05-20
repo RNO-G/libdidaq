@@ -52,10 +52,10 @@ int didaq_complete(didaq_dev_t * dev);
 
 
 #define DIDAQ_DEFINE_ENUM(NAME, ADDR, NADDR, RW, VAR, T) DIDAQ_##NAME,
-enum
+enum didaq_regs
 {
   DIDAQ_REGS(DIDAQ_DEFINE_ENUM)
-} didaq_regs;
+};
 
 
 typedef struct
