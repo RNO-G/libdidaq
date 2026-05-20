@@ -131,7 +131,11 @@ int didaq_complete(didaq_dev_t * dev)
 
   defer { dev->nxfers = 0; }
   defer { dev->spi_bufsiz = 0; }
-  defer { memset(dev->xfers,0, sizeof(dev->xfers)); }
+
+  size_t nxfers_to_zero = dev->nxfers;
+  defer { memset(dev->xfers,0, nxfers_to_zero * sizeof(*dev->xfers)); }
+  defer { memset(dev->rx_bufs,0, nxfers_to_zero * sizeof(*dev->rx_bufs)); }
+  defer { memset(dev->tx_bufs,0, nxfers_to_zero * sizeof(*dev->tx_bufs)); }
 
   if (ret < 0)
   {
@@ -145,6 +149,8 @@ int didaq_complete(didaq_dev_t * dev)
   {
     fprintf(dev->ferr,"didaq_complete: Expected %zu bytes transfered by ioctl, but only %d were transferred?\n", dev->spi_bufsiz, ret);
   }
+
+  dev->spi_bufsiz_complete += ret;
 
   //loop over all transactions, fix endianess, copy to correct buffer if needed
   for (int ixfer = 0; ixfer < dev->nxfers; ixfer++)
@@ -181,6 +187,8 @@ int didaq_complete(didaq_dev_t * dev)
       }
     }
   }
+  dev->nxfers_complete += dev->nxfers;
+
 
   return 0;
 
