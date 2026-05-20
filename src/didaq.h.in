@@ -10,14 +10,26 @@
 
 #define DIDAQ_NUM_CHANNELS 24
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 /** didaq api */
 typedef struct didaq_dev didaq_dev_t;
 
-didaq_dev_t * didaq_open( const char * spi_device,
-    const char * spi_en_gpio_label,  const char * trig_ready_gpio_label,
-    uint32_t spi_speed);
+typedef struct didaq_setup
+{
+  const char * spi_device;  /* Must be non-zero */
+  const char * spi_en_gpio_label;
+  const char * trig_ready_gpio_label;
+  uint32_t spi_speed; // 0 doesn't change
+  bool spi_en_active_high;  //default is false  (active low)
+  bool trig_ready_active_low;  //default is false (active high)
+  FILE * err_out;  //if NULL, will use stderr
+} didaq_setup_t;
+
+
+didaq_dev_t * didaq_open( const didaq_setup_t * setup);
 
 int didaq_close (didaq_dev_t * dev);
 
