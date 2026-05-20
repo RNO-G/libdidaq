@@ -1,1 +1,4 @@
-*.o *.so *.so.* src/didaq.h
+*.o
+*.so
+*.so.*
+src/didaq.h
