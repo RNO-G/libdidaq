@@ -2,9 +2,11 @@
 #define _DIDAQ_H
 
 //filled in by makefile
-#define DIDAQ_VERSION_MAJOR @@
-#define DIDAQ_VERSION_MINOR @@
-#define DIDAQ_VERSION_REV @@
+
+#define DIDAQ_VERSION_MAJOR 0
+#define DIDAQ_VERSION_MINOR 0
+#define DIDAQ_VERSION_REV 1
+
 
 #define DIDAQ_NUM_CHANNELS 24
 
