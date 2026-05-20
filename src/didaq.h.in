@@ -1,6 +1,12 @@
 #ifndef _DIDAQ_H
 #define _DIDAQ_H
 
+//filled in by makefile
+#define DIDAQ_VERSION_MAJOR @@
+#define DIDAQ_VERSION_MINOR @@
+#define DIDAQ_VERSION_REV @@
+
+
 #define DIDAQ_NUM_CHANNELS 24
 
 /** didaq api */
