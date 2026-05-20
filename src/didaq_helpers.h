@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/file.h>
 
 
 
@@ -36,7 +37,21 @@ static __attribute__((unused)) void __lock_guard_cleanup(pthread_mutex_t ** m)
 }
 
 
+
 typedef int dummy_t __attribute__((unused));
+
+
+#define flock_guard(_FD) \
+ int  CONCAT(__flock_fd__,LINE) = cleanup( __flock_cleanup) = _FD;\
+ flock(_FD,  LOCK_EX);
+
+//helper function for our flock_guard
+static __attribute__((unused)) void __flock_cleanup(int * fd)
+{
+  flock(*fd, LOCK_UN);
+}
+
+
 
 // defer the statement X until we exit scope
 #define defer \
