@@ -5,6 +5,7 @@
 #include <linux/spi/spidev.h>
 #include <stdio.h>
 #include "didaq_regs.h"
+#include "didaq.h"
 
 /** This file is not part of the API, and may change willy-nilly */
 
