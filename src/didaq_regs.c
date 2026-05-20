@@ -171,7 +171,7 @@ int didaq_complete(didaq_dev_t * dev)
         {
           if (elem_len == 4)
           {
-            *( (uint32_t*) (dev->rx_bufs[ixfer].orig_dest + ielem*elem_len)) = be16toh(*( (uint32_t*) (dev->rx_bufs[ixfer].orig_dest + ielem*elem_len)));
+            *( (uint32_t*) (dev->rx_bufs[ixfer].orig_dest + ielem*elem_len)) = be32toh(*( (uint32_t*) (dev->rx_bufs[ixfer].orig_dest + ielem*elem_len)));
           }
           else if (elem_len == 2)
           {
