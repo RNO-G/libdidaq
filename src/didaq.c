@@ -78,7 +78,8 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
   memcpy(&dev->trig_rdy,  &trig_gpio, sizeof(trig_gpio));
 
-  dev->ferr = stderr;
+  dev->ferr = ferr;
+  dev->dbg = setup->dbg;
 
   dev->spi_max_bufsiz = 4096; //this is the default
 
