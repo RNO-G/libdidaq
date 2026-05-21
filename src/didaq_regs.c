@@ -20,11 +20,25 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
 
   size_t idx = dev->nxfers++;
   dev->tx_bufs[idx].payload[1] = addr & 0xff;
-  dev->tx_bufs[idx].payload[0]  = addr >> 1;
+  dev->tx_bufs[idx].payload[0]  = addr >> 8;
   dev->tx_bufs[idx].payload[2] = (payload & 0xff000000) >> 24;
   dev->tx_bufs[idx].payload[3] = (payload & 0xff0000) >> 16;
   dev->tx_bufs[idx].payload[4] = (payload & 0xff00) >> 8;
   dev->tx_bufs[idx].payload[5] = (payload & 0xff);
+
+  if (dev->dbg)
+  {
+    fprintf(dev->ferr, " ( APPENDTX [xfer%zu]: %x %x %x %x %x %x ) \n",
+                   idx,
+                   dev->tx_bufs[idx].payload[0],
+                   dev->tx_bufs[idx].payload[1],
+                   dev->tx_bufs[idx].payload[2],
+                   dev->tx_bufs[idx].payload[3],
+                   dev->tx_bufs[idx].payload[4],
+                   dev->tx_bufs[idx].payload[5]
+                   );
+  }
+
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];
   dev->xfers[idx].rx_buf = 0;
   dev->xfers[idx].len = 6;
@@ -56,7 +70,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];
 
   dev->tx_bufs[idx].payload[1] = addr & 0xff;
-  dev->tx_bufs[idx].payload[0]  = addr >> 1;
+  dev->tx_bufs[idx].payload[0]  = addr >> 8;
   dev->tx_bufs[idx].payload[0]  |= 0x80;
 
   dev->rx_bufs[idx].orig_len = len;
@@ -156,6 +170,17 @@ int didaq_complete(didaq_dev_t * dev)
     // we read in something
     if ( dev->xfers[ixfer].rx_buf)
     {
+
+      if (dev->dbg)
+      {
+        fprintf(dev->ferr, " ( RX [xfer%d]:\n", ixfer);
+        char * buf = (char*) dev->xfers[ixfer].rx_buf;
+        for (int ib = 0; ib < dev->xfers[ixfer].len; ib++)
+        {
+          fprintf(dev->ferr,"%s0x%02hhx", ib == 0 ? "," : "", buf[ib]);
+        }
+        fprintf(dev->ferr, " )\n");
+      }
 
       //we need to copy out to external buffer
       if (dev->rx_bufs[ixfer].orig_dest !=  (char*) dev->xfers[ixfer].rx_buf)

@@ -36,6 +36,7 @@ struct didaq_dev
   uint32_t revision;
   uint32_t board_id;
   FILE * ferr;
+  int dbg;
 };
 
 
