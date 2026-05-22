@@ -218,9 +218,12 @@ int didaq_event_wait(didaq_dev_t * dev, float timeout)
 
     clock_gettime(CLOCK_MONOTONIC, &now);
 
-    if (now.tv_sec - start.tv_sec + 1e-9 * (now.tv_nsec - start.tv_nsec) > timeout)
+    if (timeout > 0 )
     {
-      return -ETIMEDOUT;
+      if (now.tv_sec - start.tv_sec + 1e-9 * (now.tv_nsec - start.tv_nsec) > timeout)
+      {
+        return -ETIMEDOUT;
+      }
     }
     usleep(dev->poll_usleep_amt);
   }
