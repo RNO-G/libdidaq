@@ -56,14 +56,12 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   }
 
 
-  if (setup->spi_speed)
-  {
-    int speed_ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &setup->spi_speed);
+  int speed = setup->spi_speed ?: 25000000;
+  int speed_ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
 
-    if (speed_ret < 0)
-    {
-      fprintf(ferr,"Trouble setting speed to  %d: (%d, %s)\n", setup->spi_speed, errno, strerror(errno));
-    }
+  if (speed_ret < 0)
+  {
+      fprintf(ferr,"Trouble setting speed to  %d: (%d, %s)\n", speed, errno, strerror(errno));
   }
 
   //set up for 8 bits per word for now (to do 16 eventually) and mode 0. These shouldn't fail. Probably.
