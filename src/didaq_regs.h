@@ -43,10 +43,10 @@ int didaq_complete(didaq_dev_t * dev);
   REG(LAST_CLK_CTR  , 0x0055,    1,     0,   0,    uint32_t)\
   REG(LAST_PPS_CTR  , 0x0056,    1,     0,   0,    uint16_t)\
   REG(LAST_MISC0    , 0x0057,    1,     0,   0,    uint32_t)\
-  REG(LAST_TRIG     , 0x0059,    1,     0,   0,    uint32_t)\
-  REG(RDOUT_CTL     , 0x005B,    1,     1,   0,    uint16_t)\
+  REG(LAST_TRIG     , 0x0059,    1,     0,   0,    didaq_reg_meta_trig_t)\
+  REG(RDOUT_CTL     , 0x005B,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
   REG(SCAL_RD       , 0x005C,    1,     0,   0,    didaq_reg_scaler_t)\
-  REG(SCAL_SEL      , 0x005D,    1,     0,   0,    didaq_reg_scal_sel_t)\
+  REG(SCAL_SEL      , 0x005D,    1,     1,   0,    didaq_reg_scal_sel_t)\
   REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)
 
 
@@ -63,11 +63,21 @@ typedef struct
   uint32_t adc_power : 6;
 } didaq_reg_pd_ctl_t;
 
+typedef struct
+{
+  uint16_t  ram_addr: 10;
+  uint8_t   trig_type;
+}didaq_reg_meta_trig_t;
 
 typedef struct
 {
   uint32_t spi_sel : 3;
 } didaq_reg_spi_sel_t;
+
+typedef struct
+{
+  uint16_t start_rd_addr: 10;
+} didaq_reg_rdout_ctl_t;
 
 
 typedef struct

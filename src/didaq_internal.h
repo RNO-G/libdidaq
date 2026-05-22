@@ -24,6 +24,7 @@ struct didaq_dev
 
   gpios_line_t spi_en;
   gpios_line_t trig_rdy;
+  didaq_reg_capture_ctl_t capture_ctl;
 
   struct spi_ioc_transfer xfers[511];
   didaq_txn_t tx_bufs[511]; // memory for tx transactions
@@ -37,6 +38,9 @@ struct didaq_dev
   uint32_t board_id;
   FILE * ferr;
   int dbg;
+  uint32_t poll_usleep_amt;
+  int event_ready;
+  struct timespec event_ready_time;
 };
 
 

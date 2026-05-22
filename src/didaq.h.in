@@ -8,11 +8,15 @@
 #define DIDAQ_VERSION_REV @@
 
 
+#define DIDAQ_NUM_BEAMS 10
+#define DIDAQ_NUM_COINC 2
 #define DIDAQ_NUM_CHANNELS 24
+#define DIDAQ_MAX_LEN 4096
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 /** didaq api */
 typedef struct didaq_dev didaq_dev_t;
@@ -29,14 +33,76 @@ typedef struct didaq_setup
   int dbg;
 } didaq_setup_t;
 
+typedef struct didaq_scalers
+{
+
+  uint16_t coinc_singles_1Hz[DIDAQ_NUM_CHANNELS];
+  uint16_t coinc_singles_1Hz_gated[DIDAQ_NUM_CHANNELS];
+  uint16_t coinc_trig_100mHz[DIDAQ_NUM_COINC];
+  uint16_t coinc_trig_100mHz_gated[DIDAQ_NUM_COINC];
+  uint16_t beam_trig_100mHz[DIDAQ_NUM_BEAMS];
+  uint16_t beam_trig_100mHz_gated[DIDAQ_NUM_BEAMS];
+  uint16_t beam_servo_1Hz[DIDAQ_NUM_BEAMS];
+  uint16_t num_pps;
+  uint32_t clk_rate;
+  struct timespec readout_time;
+} didaq_scalers_t;
+
+
+/** Setup for event readout
+ **/
+typedef struct didaq_event_readout
+{
+  struct
+  {
+    uint16_t len; //will be truncated to mulitple of 4
+    uint16_t start; //will be truncated to multiple of 4
+  } in;
+
+  struct
+  {
+    uint32_t event_counter;
+    uint32_t trig_counter;
+    uint32_t dead_counter;
+    uint32_t clk_cycles;
+    uint16_t pps_counter;
+    uint32_t last_coinc_pattern;
+    uint8_t trig_type;
+    struct timespec ready_time;
+    struct timespec readout_time;
+  } meta;
+
+  // pointer to where events should get written to, NULL to skip channel.
+  uint8_t * wfs[DIDAQ_NUM_CHANNELS];
+} didaq_event_readout_t;
+
+
+typedef struct didaq_trigger_setup
+{
+  bool enable_ext;
+  bool enable_pps;
+
+} didaq_trigger_setup_t;
+
+
 
 didaq_dev_t * didaq_open( const didaq_setup_t * setup);
-
 int didaq_close (didaq_dev_t * dev);
 
+//starts new run  / clears event
+int didaq_reset_acq(didaq_dev_t *dev);
+
+int didaq_configure_trigger(didaq_dev_t *dev, const didaq_trigger_setup_t * trig);
+
+int didaq_force_trigger(didaq_dev_t * dev);
+int didaq_event_wait(didaq_dev_t * dev, float timeout);
+
+int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout);
+
+int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal);
+
 int didaq_dump(didaq_dev_t * dev, FILE *f);
-
-
-
+int didaq_dump_scalers(const didaq_scalers_t *s, FILE *f);
+int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f);
 
 #endif
