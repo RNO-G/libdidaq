@@ -15,7 +15,7 @@ int main (int nargs, char ** args)
   didaq_reset_acq(dev);
 
 
-  uint8_t wfs[DIDAQ_NUM_CHANNELS][512];
+  static uint8_t wfs[DIDAQ_NUM_CHANNELS][512];
 
   didaq_event_readout_t rdout = { .in  = {.len = 512, .start = 1024}, .wfs = 
     { 
