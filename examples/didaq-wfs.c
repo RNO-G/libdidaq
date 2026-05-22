@@ -4,16 +4,16 @@
 int main (int nargs, char ** args)
 {
   didaq_setup_t setup = { 
-    .spi_device = nargs > 1 ? args[1] : "/dev/spidev1.0", 
+    .spi_device = nargs > 2 ? args[2] : "/dev/spidev1.0", 
     .spi_en_gpio_label = "NSPIBUS_EN", 
-    .spi_speed = nargs > 2 ? atoi(args[2]) : 0 
+    .spi_speed = nargs > 3 ? atoi(args[3]) : 0 
   };
+  int N = nargs > 1 ? atoi(args[1]) : 10;
 
   didaq_dev_t * dev = didaq_open(&setup);
 
   didaq_reset_acq(dev);
 
-  didaq_force_trigger(dev);
 
   uint8_t wfs[DIDAQ_NUM_CHANNELS][512];
 
@@ -26,9 +26,13 @@ int main (int nargs, char ** args)
     }
   };
 
-  didaq_event_readout(dev, &rdout);
 
-  didaq_dump_event_readout(&rdout, stdout);
+  for (int i = 0; i < N; i++)
+  {
+    didaq_force_trigger(dev);
+    didaq_event_readout(dev, &rdout);
+    didaq_dump_event_readout(&rdout, stdout);
+  }
 
   return didaq_close(dev);
 }
