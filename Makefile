@@ -44,7 +44,7 @@ $(NAMED_LIB): $(VERSIONED_LIB)
 	ln -sf  $< $@
 
 $(VERSIONED_LIB): $(OBJS)
-	 $(CC) -shared $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
+	 $(CC) -shared $(LDFLAGS) -Wl,-soname,$(NAMED_LIB) -o $@ $^
 
 install: $(LIB) examples
 	install -d $(DESTDIR)$(PREFIX)/$(LIBDIR)
