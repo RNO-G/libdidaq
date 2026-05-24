@@ -342,6 +342,12 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   for ( int ARRAY_I = 0; ARRAY_I < LEN; ARRAY_I ++) ACCUM += fprintf(F, "%s" FRMT, ARRAY_I ? "," : "", PTR[ARRAY_I]);\
   ACCUM +=  fprintf(F, "]\n")
 
+#define PRINT_ARRAY_CSV(F, NAME, LEN, FRMT, PTR, ACCUM)\
+  ACCUM +=  fprintf(F, "%s", NAME); \
+  for ( int ARRAY_I = 0; ARRAY_I < LEN; ARRAY_I ++) ACCUM += fprintf(F, ","FRMT,  PTR[ARRAY_I]);\
+  ACCUM +=  fprintf(F, "\n")
+
+
 
 int didaq_dump(didaq_dev_t * dev, FILE * f)
 {
@@ -399,6 +405,35 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
       char chname[5];
       sprintf(chname,"CH%02d", i);
       PRINT_ARRAY(f, chname, s->in.len, "%03u", s->wfs[i], ret);
+    }
+
+  }
+  return ret;
+}
+
+int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f)
+{
+
+  int ret = 0;
+  ret += fprintf(f, "DIDAQEVENT\nREADY_TIME, %ld.%09ld\nREADOUT_TIME,%ld.%09ld\n",
+      s->meta.ready_time.tv_sec, s->meta.ready_time.tv_nsec, s->meta.readout_time.tv_sec, s->meta.readout_time.tv_nsec);
+  ret += fprintf(f, "EVENT_COUNTER, %u\n", s->meta.event_counter);
+  ret += fprintf(f, "TRIG_COUNTER, %u\n", s->meta.trig_counter);
+  ret += fprintf(f, "DEAD_COUNTER, %u\n", s->meta.dead_counter);
+  ret += fprintf(f, "CLK_CYCLES,  %u\n", s->meta.clk_cycles);
+  ret += fprintf(f, "PPS_COUNTER, %hu\n", s->meta.pps_counter);
+  ret += fprintf(f, "LAST_COIN_PAT, %x\n", s->meta.last_coinc_pattern);
+  ret += fprintf(f, "TRIG_TYPE, %hhx\n", s->meta.trig_type);
+  ret += fprintf(f, "START_SAMPLE, %hu\n", s->in.start);
+  ret += fprintf(f, "NUM_SAMPLES, %hu\n", s->in.len);
+
+  for (int i = 0 ; i < DIDAQ_NUM_CHANNELS; i++)
+  {
+    if (s->wfs[i])
+    {
+      char chname[5];
+      sprintf(chname,"CH%02d", i);
+      PRINT_ARRAY_CSV(f, chname, s->in.len, "%03u", s->wfs[i], ret);
     }
 
   }

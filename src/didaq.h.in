@@ -104,5 +104,6 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal);
 int didaq_dump(didaq_dev_t * dev, FILE *f);
 int didaq_dump_scalers(const didaq_scalers_t *s, FILE *f);
 int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f);
+int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f);
 
 #endif
