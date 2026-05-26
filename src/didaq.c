@@ -256,7 +256,7 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   {
     if (!rdout->wfs[i]) continue;
     ret = didaq_sched_write_RDOUT_CTL(dev, &rdout_ctl); CHECK(ret);
-    for (int j = 0; j < (rdout->in.len & (~0x03)); j++)
+    for (int j = 0; j < (rdout->in.len & (~0x03)); j+=4)
     {
       ret = didaq_sched_read_DATA(dev, i, 4, &rdout->wfs[i][j]); CHECK(ret);
     }
