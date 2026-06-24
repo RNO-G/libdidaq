@@ -47,7 +47,8 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
   return 0;
 }
 
-static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, size_t len,  char * dest)
+static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, size_t len,  char * dest,
+    const uint8_t * var_read_src, size_t var_read_len)
 {
   if (!dev) return -EIO;
 
@@ -87,6 +88,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
   // use our buffer to startwith only external buffer
   else
   {
+    assert(var_read_src);
 
     //first send the address as a first transaction
     dev->xfers[idx].len = 2;
@@ -96,7 +98,6 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
 
 
     //now for the payload with the external buffer
-    //
     //check if we need to do a transaction
     if ( (dev->spi_bufsiz + len > dev->spi_max_bufsiz) || (dev->nxfers == 511))
     {
@@ -106,7 +107,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
 
     idx = dev->nxfers++;
     dev->xfers[idx].len = len;
-    dev->xfers[idx].tx_buf = 0;
+    dev->xfers[idx].tx_buf = (uint64_t)  (var_read_src + (var_read_len - len));
     dev->xfers[idx].rx_buf = (uint64_t) dest;
 
 
@@ -218,18 +219,52 @@ int didaq_complete(didaq_dev_t * dev)
 }
 
 
+//helper used to fill var read buffer, used for rapid fire reading of the same register
+static void maybe_fill_var_read(uint8_t * var_read, size_t len, uint16_t addr)
+{
+  assert(len  >= 8 &&  (( len & 0xf)==0)); //muliple of 4, at least 8 
+  static pthread_mutex_t var_read_mutex = PTHREAD_MUTEX_INITIALIZER;
+  //check for 0x80 bit, which we'll fill last!
+  if (!(var_read[2] & 0x80))
+  {
+    // lock the mutex, in case there's contention (very unlilkely, but let's be careful)
+    lock_guard(&var_read_mutex);
+
+    if (var_read[2] & 0x80)
+    {
+      //guess someone else finished first! oh well
+    }
+    else
+    {
+      //fill var_read as needed, starting from the back so that our check condition works
+      size_t i = len - 2;
+      while (i!=2)
+      {
+        i-=4;
+        var_read[i+1] = addr & 0xff;
+        var_read[i] = addr >> 8;
+        var_read[i] |= 0x80;
+      }
+    }
+  }
+}
 
 
 const int offset = 0; //purposely shadowed
 const size_t num_rbytes = 4; //purposely shadowed
+
+// Read function implementations. The var_read case uses a static buffer to keep feeding the address.
 #define DIDAQ_READ_FNS_IMPL(NAME,ADDR,NADDR,RW,VAR,T) \
 int didaq_sched_read_##NAME( didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR) DIDAQ_VARREAD_PARAM(VAR) T * val)\
 {\
-  return didaq_append_rx(dev, ADDR + offset, sizeof(T), num_rbytes, (char*) val);\
+  assert(num_rbytes <=  (VAR ?: 4));\
+  DIDAQ_IIF(DIDAQ_IS_ZERO(VAR)) ( uint8_t * var_read = NULL; , static uint8_t var_read[VAR];  maybe_fill_var_read(var_read, VAR, ADDR);)\
+  size_t var_read_len = VAR;\
+  return didaq_append_rx(dev, ADDR + offset, sizeof(T), num_rbytes, (char*) val, var_read, var_read_len);\
 }\
 int didaq_read_##NAME( didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR) DIDAQ_VARREAD_PARAM(VAR) T * val)\
 {\
-  int ret =  didaq_append_rx(dev,ADDR + offset, sizeof(T), num_rbytes,(char*)  val);\
+  int ret =  didaq_sched_read_##NAME(dev, DIDAQ_IIF(DIDAQ_IS_ONE(NADDR))(,offset,) DIDAQ_IIF(DIDAQ_IS_ZERO(VAR))(,num_rbytes,) val);\
   if (ret) return ret;\
   return didaq_complete(dev);\
 }
