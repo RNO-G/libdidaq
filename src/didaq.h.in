@@ -29,6 +29,7 @@ typedef struct didaq_setup
   uint32_t spi_speed; // 0 doesn't change
   bool spi_en_active_high;  //default is false  (active low)
   bool trig_ready_active_low;  //default is false (active high)
+  bool pipeline_reads;
   FILE * err_out;  //if NULL, will use stderr
   int dbg;
 } didaq_setup_t;
