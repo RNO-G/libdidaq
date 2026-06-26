@@ -17,6 +17,13 @@ typedef struct didaq_txn
   char * orig_dest;
 } didaq_txn_t;
 
+
+#define DIDAQ_PIPELINED_BUFFERS(NAME, ADDR, NADDR, RW, VAR, T) \
+  DIDAQ_IIF(DIDAQ_IS_ZERO(VAR))(\
+   /*not variable */, \
+    T pipelined_##NAME[NADDR][VAR]; )
+
+
 struct didaq_dev
 {
   didaq_setup_t setup;
@@ -41,6 +48,9 @@ struct didaq_dev
   uint32_t poll_usleep_amt;
   int event_ready;
   struct timespec event_ready_time;
+
+  // pipeline buffers
+  DIDAQ_REGS(DIDAQ_PIPELINED_BUFFERS)
 };
 
 

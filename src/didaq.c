@@ -94,6 +94,26 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
     fclose(fbufsiz);
   }
 
+  // set up pipelined buffers
+
+#define SETUP_PIPELINED_BUFFERS(NAME, ADDR, NADDR, RW, VAR, T) \
+  DIDAQ_IIF(DIDAQ_IS_ZERO(VAR))\
+  ( /* nothing if zero */, \
+  for (size_t offset = 0; offset < NADDR; offset++)\
+  {\
+    size_t i = VAR - 2; \
+    while(i != 2)\
+    {\
+      i-=4; \
+      dev->pipelined_##NAME[offset][i+1] = (ADDR + offset) & 0xff; \
+      dev->pipelined_##NAME[offset][i] = 0x80 | ((ADDR + offset)  >> 8); \
+    }\
+  }\
+  )
+
+  DIDAQ_REGS(SETUP_PIPELINED_BUFFERS)
+
+
   // enable spi enable
   gpios_set_value(&dev->spi_en, true);
   didaq_sched_read_REVISION(dev, &dev->revision);

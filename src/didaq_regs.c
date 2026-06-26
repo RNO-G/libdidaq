@@ -48,7 +48,7 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
 }
 
 static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, size_t len,  char * dest,
-    const uint8_t * var_read_src, size_t var_read_len)
+    const void * pipelined_buf, size_t pipelined_buf_siz)
 {
   if (!dev) return -EIO;
 
@@ -88,7 +88,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
   // use our buffer to startwith only external buffer
   else
   {
-    assert(var_read_src);
+    assert(pipelined_buf_siz && pipelined_buf);
 
     //first send the address as a first transaction
     dev->xfers[idx].len = 2;
@@ -107,11 +107,12 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
 
     idx = dev->nxfers++;
     dev->xfers[idx].len = len;
-    dev->xfers[idx].tx_buf = (uint64_t)  (var_read_src + (var_read_len - len));
+    dev->xfers[idx].tx_buf = (uint64_t)  ( (uint8_t*) pipelined_buf + (pipelined_buf_siz - len));
     dev->xfers[idx].rx_buf = (uint64_t) dest;
 
 
     // if len is not a multiple of 4, we will need to throw out a few bytes at the end
+    // (hopefully we never need to exercise this code :)
     if (len % 4)
     {
       if ( (dev->spi_bufsiz + (4-(len %4)) > dev->spi_max_bufsiz) || (dev->nxfers == 511))
@@ -219,35 +220,6 @@ int didaq_complete(didaq_dev_t * dev)
 }
 
 
-//helper used to fill var read buffer, used for rapid fire reading of the same register
-static void maybe_fill_var_read(uint8_t * var_read, size_t len, uint16_t addr)
-{
-  assert(len  >= 8 &&  (( len & 0xf)==0)); //muliple of 4, at least 8 
-  static pthread_mutex_t var_read_mutex = PTHREAD_MUTEX_INITIALIZER;
-  //check for 0x80 bit, which we'll fill last!
-  if (!(var_read[2] & 0x80))
-  {
-    // lock the mutex, in case there's contention (very unlilkely, but let's be careful)
-    lock_guard(&var_read_mutex);
-
-    if (var_read[2] & 0x80)
-    {
-      //guess someone else finished first! oh well
-    }
-    else
-    {
-      //fill var_read as needed, starting from the back so that our check condition works
-      size_t i = len - 2;
-      while (i!=2)
-      {
-        i-=4;
-        var_read[i+1] = addr & 0xff;
-        var_read[i] = addr >> 8;
-        var_read[i] |= 0x80;
-      }
-    }
-  }
-}
 
 
 const int offset = 0; //purposely shadowed
@@ -258,9 +230,9 @@ const size_t num_rbytes = 4; //purposely shadowed
 int didaq_sched_read_##NAME( didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR) DIDAQ_VARREAD_PARAM(VAR) T * val)\
 {\
   assert(num_rbytes <=  (VAR ?: 4));\
-  DIDAQ_IIF(DIDAQ_IS_ZERO(VAR)) ( uint8_t * var_read = NULL; , static uint8_t var_read[VAR];  maybe_fill_var_read(var_read, VAR, ADDR);)\
-  size_t var_read_len = VAR;\
-  return didaq_append_rx(dev, ADDR + offset, sizeof(T), num_rbytes, (char*) val, var_read, var_read_len);\
+  DIDAQ_IIF(DIDAQ_IS_ZERO(VAR)) ( const T * pipelined_buf = NULL; , const T * pipelined_buf = dev->pipelined_##NAME[offset]; )\
+  size_t pipelined_buf_siz = VAR;\
+  return didaq_append_rx(dev, ADDR + offset, sizeof(T), num_rbytes, (char*) val, pipelined_buf, pipelined_buf_siz);\
 }\
 int didaq_read_##NAME( didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR) DIDAQ_VARREAD_PARAM(VAR) T * val)\
 {\
