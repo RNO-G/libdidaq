@@ -59,3 +59,4 @@ static __attribute__((unused)) void __flock_cleanup(int * fd)
   dummy_t CONCAT(__dummy__,__LINE__) cleanup(CONCAT(__defer__,__LINE__));\
   void CONCAT(__defer__,__LINE__)(dummy_t * __dummy__)
 
+#define countof(X)  (sizeof(X)/sizeof(*X))
