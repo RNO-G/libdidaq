@@ -7,6 +7,8 @@ LIBDIR?=lib
 INCDIR?=include
 BINDIR?=bin
 
+RNO_G_SHIM?=n
+
 LIB=libdidaq.so
 VER_MAJOR=0
 VER_MINOR=0
@@ -20,10 +22,18 @@ SRC=src/didaq_regs.c src/didaq.c
 EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs examples/didaq-wfs-csv
 OBJS = $(SRC:.c=.o)
 INC_PUBLIC=src/didaq.h src/didaq_regs.h
+LINKLIBS=-ldidaq -lgpios
+
+ifeq ($(RNO_G_SHIM), y)
+	SRC += src/didaq_rno-g.c
+	INC_PUBLIC += src/didaq_rno-g.h
+	LINKLIBS += lrno-g -lz
+endif
+
 INC_PRIVATE=src/didaq_internal.h src/didaq_helpers.h
 INCLUDES=$(INC_PUBLIC) $(INC_PRIVATE)
 
-.PHONY: all clean 
+.PHONY: all clean
 
 all: $(LIB) $(EXAMPLES)
 
@@ -35,7 +45,7 @@ src/%.o: src/%.c $(INCLUDES)
 
 
 examples/%: examples/%.c $(LIB)
-	$(CC) $(CFLAGS)  -Isrc $< -o $@ -L. -ldidaq -lgpios $(LDFLAGS)
+	$(CC) $(CFLAGS)  -Isrc $< -o $@ -L. $(LINKLIBS) $(LDFLAGS)
 
 $(LIB): $(NAMED_LIB)
 	ln -sf  $< $@
