@@ -376,8 +376,9 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
 
 
-int didaq_dump(didaq_dev_t * dev, FILE * f)
+int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 {
+  (void) flags;
   int ret = 0;
   ret += fprintf(f, "[[DIDAQ at 0x%p]]\n", dev);
   ret += fprintf(f, "  Revision: 0x%x\n", dev->revision);

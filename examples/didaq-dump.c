@@ -11,6 +11,6 @@ int main (int nargs, char ** args)
 
   didaq_dev_t * dev = didaq_open(&setup);
 
-  didaq_dump( dev, stdout);
+  didaq_dump( dev, stdout,0);
   return didaq_close(dev);
 }
