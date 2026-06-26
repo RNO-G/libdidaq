@@ -107,4 +107,9 @@ int didaq_dump_scalers(const didaq_scalers_t *s, FILE *f);
 int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f);
 int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f);
 
+
+int didaq_set_thresholds( didaq_dev_t * dev, 
+                          const didaq_phased_thresholds_t * phased,
+                          const didaq_coin_thresholds_t * coin);
+
 #endif
