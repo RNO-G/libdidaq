@@ -49,8 +49,12 @@ struct didaq_dev
   int event_ready;
   struct timespec event_ready_time;
 
+  int run_number;
+
   // pipeline buffers
   DIDAQ_REGS(DIDAQ_PIPELINED_BUFFERS)
+
+
 };
 
 
