@@ -154,6 +154,7 @@ int didaq_reset_acq(didaq_dev_t * dev)
 
   dev->capture_ctl.event_clr = 0;
   dev->capture_ctl.run_ctr_rst = 0;
+  dev->capture_ctl.sw_trig = 0;
 
   didaq_reg_capture_ctl_t strobe ; 
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
