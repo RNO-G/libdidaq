@@ -390,6 +390,16 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
   ret += fprintf(f, "  bufsiz completed: %lu\n", dev->spi_bufsiz_complete);
   ret += fprintf(f, "  max_bufsiz: %lu\n", dev->spi_max_bufsiz);
   ret += fprintf(f, "  spi_en_gpio_present? %d,  trig_rdy_gpio_present? %d\n", !!dev->spi_en.fd, !!dev->trig_rdy.fd);
+
+  didaq_reg_capture_stat_t capture_stat = {0};
+  didaq_reg_capture_ctl_t capture_ctl = {0};
+  if (didaq_sched_read_CAPTURE_CTL(dev,&capture_ctl)) return -1;
+  if (didaq_sched_read_CAPTURE_STAT(dev,&capture_stat)) return -1;
+  if (didaq_complete(dev)) return -1;
+
+  ret += fprintf(f, "  capture_stat = { .event_busy = %u, .event_rdy = %u }\n", capture_stat.event_bsy, capture_stat.event_rdy);
+  ret += fprintf(f, "  capture_ctl = { .sw_trig = %u, .event_clr = %u, .run_ctr_rst = %u, .pps_en = %u, .ext_en = %u }\n", capture_ctl.sw_trig, capture_ctl.event_clr, capture_ctl.run_ctr_rst, capture_ctl.pps_en, capture_ctl.ext_en);
+
   return ret;
 }
 
