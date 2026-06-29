@@ -32,6 +32,8 @@ struct didaq_dev
   gpios_line_t spi_en;
   gpios_line_t trig_rdy;
   didaq_reg_capture_ctl_t capture_ctl;
+  didaq_reg_phas_trig_ctl_t phased_ctl;
+  didaq_reg_coin_trig_ctl_t coin_ctl[DIDAQ_NUM_COINC];
 
   struct spi_ioc_transfer xfers[511];
   didaq_txn_t tx_bufs[511]; // memory for tx transactions
