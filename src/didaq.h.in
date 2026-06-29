@@ -116,7 +116,7 @@ typedef struct didaq_phased_thresholds
 
 typedef struct didaq_coin_thresholds 
 {
-  uint16_t coin_thresholds[DIDAQ_NUM_CHANNELS];
+  uint8_t coin_thresholds[DIDAQ_NUM_CHANNELS];
 } didaq_coin_thresholds_t;
 
 

@@ -502,11 +502,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
     {
       ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
           & ( didaq_reg_coin_thresh_t) {
-            .thresh =
-            {
-              coin->coin_thresholds[chan],
-              coin->coin_thresholds[chan+1]
-            }
+            .thresh0 = coin->coin_thresholds[chan],
+            .thresh1 = coin->coin_thresholds[chan+1]
           });
       CHECK(ret);
     }

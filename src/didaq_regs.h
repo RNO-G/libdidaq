@@ -144,7 +144,10 @@ typedef struct
 
 typedef struct
 {
-  uint16_t thresh[2];
+  uint8_t thresh0;
+  uint8_t __pad0; 
+  uint8_t thresh1;
+  uint8_t __pad1; 
 } didaq_reg_coin_thresh_t;
 
 typedef struct
