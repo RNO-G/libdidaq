@@ -480,7 +480,7 @@ int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f)
 }
 
 
-int didaq_set_thresholds( didaq_dev_t * dev, 
+int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin)
 {
@@ -488,9 +488,14 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 
   if (phased)
   {
-    for (int beam = 0; beam < countof(phased->beam_thresholds); beam++)
+    for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
     {
-      ret = didaq_sched_write_BEAM_THRESH(dev, beam, &phased->beam_thresholds[beam]); CHECK(ret);
+      ret = didaq_sched_write_BEAM_THRESH(dev, beam,
+          & (didaq_reg_phas_thresh_t) {
+           .trig = phased->beam_trig_thresholds[beam],
+           .servo = phased->beam_servo_thresholds[beam]
+           });
+      CHECK(ret);
     }
 
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
@@ -503,7 +508,6 @@ int didaq_set_thresholds( didaq_dev_t * dev,
               coin->coin_thresholds[chan+1]
             }
           });
-
       CHECK(ret);
     }
   }

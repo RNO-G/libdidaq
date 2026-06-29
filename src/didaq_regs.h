@@ -15,7 +15,7 @@
 
 
 /**
- * Completes all scheduled transactions  that were scheduled using the sched form of register functions. 
+ * Completes all scheduled transactions  that were scheduled using the sched form of register functions.
  * @param dev the didaq device
  * */
 int didaq_complete(didaq_dev_t * dev);
@@ -52,7 +52,7 @@ int didaq_complete(didaq_dev_t * dev);
   REG(COINCTL_12_23 , 0x0039,    1,     1,   0,    didaq_reg_coin_trig_ctl_t )\
   REG(COIN_THRESH   , 0x003a,    12,    1,   0,    didaq_reg_coin_thresh_t )\
   REG(PHASED_CTL    , 0x0046,    1,     1,   0,    didaq_reg_phas_trig_ctl_t )\
-  REG(BEAM_THRESH   , 0x0047,    10,    1,   0,    uint32_t)\
+  REG(BEAM_THRESH   , 0x0047,    10,    1,   0,    didaq_reg_phas_thresh_t)\
   REG(LAST_EVT_CTR  , 0x0052,    1,     0,   0,    uint32_t)\
   REG(LAST_TRIG_CTR , 0x0053,    1,     0,   0,    uint32_t)\
   REG(LAST_DEAD_CTR , 0x0054,    1,     0,   0,    uint32_t)\
@@ -146,6 +146,13 @@ typedef struct
 {
   uint16_t thresh[2];
 } didaq_reg_coin_thresh_t;
+
+typedef struct
+{
+  uint16_t trig;
+  uint16_t servo;
+} didaq_reg_phas_thresh_t;
+
 
 typedef struct
 {
