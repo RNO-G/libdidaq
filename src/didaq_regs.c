@@ -109,6 +109,7 @@ static int didaq_append_rx(didaq_dev_t * dev, uint16_t addr, size_t elem_len, si
     dev->xfers[idx].len = len;
     dev->xfers[idx].tx_buf = (uint64_t)  ( (uint8_t*) pipelined_buf + (pipelined_buf_siz - len));
     dev->xfers[idx].rx_buf = (uint64_t) dest;
+    dev->spi_bufsiz += len;
 
 
     // if len is not a multiple of 4, we will need to throw out a few bytes at the end
