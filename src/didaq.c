@@ -176,11 +176,31 @@ int didaq_reset_acq(didaq_dev_t * dev)
 
 int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * trig)
 {
-  (void) trig;
   dev->capture_ctl.ext_en = trig->enable_ext;
   dev->capture_ctl.pps_en = trig->enable_pps;
+  int ret = didaq_write_CAPTURE_CTL(dev, &dev->capture_ctl); CHECK(ret);
 
-  return didaq_write_CAPTURE_CTL(dev, &dev->capture_ctl);
+
+  dev->phased_ctl.en_trig = trig->phased.enable;
+  dev->phased_ctl.en_trig_to_data = trig->phased.enable_readout;
+  dev->phased_ctl.req_consec_wins = trig->phased.require_consecutive_windows;
+  dev->phased_ctl.divide_by_2 = trig->phased.divide_by_2;
+  dev->phased_ctl.channel_mask = ~trig->phased.chan_exclude_mask;
+  dev->phased_ctl.beam_mask = ~trig->phased.beam_exclude_mask;
+
+  ret = didaq_write_PHASED_CTL(dev, &dev->phased_ctl); CHECK(ret);
+
+  for (int i = 0; i < DIDAQ_NUM_COINC; i++)
+  {
+    dev->coin_ctl[i].en_module = trig->coinc[i].enable;
+    dev->coin_ctl[i].en_readout = trig->coinc[i].enable_readout;
+    dev->coin_ctl[i].num_coinc = trig->coinc[i].num_required;
+    dev->coin_ctl[i].coin_win = trig->coinc[i].coinc_window;
+    dev->coin_ctl[i].include_mask = ~trig->coinc[i].channel_exclude_mask;
+    ret = didaq_write_COIN_CTL(dev,i,&dev->coin_ctl[i]); CHECK(ret);
+  }
+
+  return ret;
 }
 
 

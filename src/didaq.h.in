@@ -83,6 +83,26 @@ typedef struct didaq_trigger_setup
   bool enable_ext;
   bool enable_pps;
 
+  //these are defined for each half of the board (0-11, 12-23);
+  struct
+  {
+    bool enable; // enable computation of the trigger
+    bool enable_readout;  //readout on trigger
+    uint8_t num_required : 3; // Number of channels required for coincidence (0-7), 
+    uint8_t coinc_window : 4 ;  // 8-ns cycles, 0-15
+    uint16_t channel_exclude_mask : ( DIDAQ_NUM_BEAMS / DIDAQ_NUM_COINC);  //12 bit mask, 0 to include all
+  } coinc[DIDAQ_NUM_COINC];
+
+  struct
+  {
+    bool enable;
+    bool enable_readout;
+    bool require_consecutive_windows;
+    bool divide_by_2;
+    uint8_t chan_exclude_mask : 4;
+    uint16_t beam_exclude_mask : DIDAQ_NUM_BEAMS;
+  } phased;
+
 } didaq_trigger_setup_t;
 
 
