@@ -120,8 +120,8 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   didaq_sched_read_BOARD_ID(dev, &dev->board_id);
   didaq_sched_read_CAPTURE_CTL(dev, &dev->capture_ctl);
   didaq_sched_read_PHASED_CTL(dev, &dev->phased_ctl);
-  didaq_sched_read_COINCTL_0_11(dev, &dev->coin_ctl[0]);
-  didaq_sched_read_COINCTL_12_23(dev, &dev->coin_ctl[1]);
+  didaq_sched_read_COIN_CTL(dev,0, &dev->coin_ctl[0]);
+  didaq_sched_read_COIN_CTL(dev,1, &dev->coin_ctl[1]);
   didaq_complete(dev);
 
   return dev;

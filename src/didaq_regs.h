@@ -48,8 +48,7 @@ int didaq_complete(didaq_dev_t * dev);
   REG(CAPTURE_CTL   , 0x000e,    1,     1,   0,    didaq_reg_capture_ctl_t )\
   REG(CAPTURE_STAT  , 0x000f,    1,     0,   0,    didaq_reg_capture_stat_t )\
   REG(DATA          , 0x0014,    24,    0,   4096, uint8_t )\
-  REG(COINCTL_0_11  , 0x0038,    1,     1,   0,    didaq_reg_coin_trig_ctl_t )\
-  REG(COINCTL_12_23 , 0x0039,    1,     1,   0,    didaq_reg_coin_trig_ctl_t )\
+  REG(COIN_CTL      , 0x0038,    2,     1,   0,    didaq_reg_coin_trig_ctl_t )\
   REG(COIN_THRESH   , 0x003a,    12,    1,   0,    didaq_reg_coin_thresh_t )\
   REG(PHASED_CTL    , 0x0046,    1,     1,   0,    didaq_reg_phas_trig_ctl_t )\
   REG(BEAM_THRESH   , 0x0047,    10,    1,   0,    didaq_reg_phas_thresh_t)\
