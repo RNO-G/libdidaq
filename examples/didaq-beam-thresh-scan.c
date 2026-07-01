@@ -10,26 +10,17 @@ const char * dev = "/dev/spidev1.0";
 
 
 didaq_trigger_setup_t s = {
-  .coinc =
+  .phased =
   {
-     {
       .enable = true, .enable_readout =true,
-      .num_required = 2,
-      .coinc_window = 2
-    },
-    {
-      .enable = true, .enable_readout =true,
-      .num_required = 2,
-      .coinc_window = 2
-    }
   }
 };
 
-int start_thresh = 1; 
-int step = 1;
-int end_thresh = 255;
-int thresh_step = 1;
+int start_thresh = 1000; 
+int end_thresh = 30000;
+int thresh_step = 100;
 int wait_time = 20;
+double servo_frac = 0.8;
 
 
 int main (int nargs, char ** args) 
@@ -41,24 +32,26 @@ int main (int nargs, char ** args)
     {
       dev = args[++i];
     }
-    else if (!strcmp(args[i],"-w") && i < nargs-1)
+    else if (!strcmp(args[i],"-2"))
     {
-      int w = atoi(args[++i]);
-      s.coinc[0].coinc_window = w;
-      s.coinc[1].coinc_window = w;
+      s.phased.divide_by_2 = true ;
     }
-    else if (!strcmp(args[i], "-n") && i < nargs-1)
+    else if (!strcmp(args[i],"-c"))
     {
-      int n = atoi(args[++i]);
-      s.coinc[0].num_required = n;
-      s.coinc[1].num_required = n;
+      s.phased.require_consecutive_windows = true;
     }
-    else if (!strcmp(args[i],"-M") && i < nargs-1)
+ 
+    else if (!strcmp(args[i], "-B") && i < nargs-1)
     {
       uint32_t M = strtoul(args[++i], 0, 0);
       uint32_t E = ~M;
-      s.coinc[0].channel_exclude_mask = E & (0xfff);
-      s.coinc[1].channel_exclude_mask = (E >> 12) & (0xfff);
+      s.phased.beam_exclude_mask = E;
+    }
+    else if (!strcmp(args[i],"-C") && i < nargs-1)
+    {
+      uint32_t M = strtoul(args[++i], 0, 0);
+      uint32_t E = ~M;
+      s.phased.chan_exclude_mask = E & (0xf);
     }
     else if (!strcmp(args[i],"-b") && i < nargs-1)
     {
@@ -74,12 +67,17 @@ int main (int nargs, char ** args)
     }
     else if (!strcmp(args[i],"-s") && i < nargs-1)
     {
-      step = strtoul(args[++i], 0, 0);
+      thresh_step = strtoul(args[++i], 0, 0);
     }
+    else if (!strcmp(args[i],"-f") && i < nargs-1)
+    {
+      servo_frac = atof(args[++i]);
+    }
+ 
     else
     {
 
-      fprintf(stderr,"Usage:  didaq-coin-thresh-scan [ -d DEVICE ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [ -M MASK ] [-b BEGIN_THRESH ] [-e END_THRESH ] [-s STEP_THRESH]  [-t WAIT_TIME ] \n");
+      fprintf(stderr,"Usage:  didaq-coin-thresh-scan [ -d DEVICE ] [ -2 -c] [ -B meam mask ] [ -C channel_mask ] [-b BEGIN_THRESH ] [-e END_THRESH ] [-s STEP_THRESH]  [-t WAIT_TIME ] \n");
 
       return 0;
     }
@@ -96,12 +94,16 @@ int main (int nargs, char ** args)
   didaq_configure_trigger(dev, &s);
   didaq_dump(dev,stdout,0);
 
-  didaq_coin_thresholds_t th; 
+  didaq_phased_thresholds_t th; 
   didaq_scalers_t scal; 
   for (int thresh = start_thresh; thresh <= end_thresh; thresh+=thresh_step)
   {
-    for (int j = 0; j < DIDAQ_NUM_CHANNELS; j++) th.coin_thresholds[j] = thresh;
-    didaq_set_thresholds(dev, 0, &th);
+    for (int j = 0; j < DIDAQ_NUM_BEAMS; j++)
+    {
+	    th.beam_trig_thresholds[j] = thresh;
+	    th.beam_servo_thresholds[j] = thresh* servo_frac;;
+    }
+    didaq_set_thresholds(dev, &th, 0);
     printf("Using threshold of %d\n", thresh);
     sleep(1);
     didaq_read_scalers(dev, &scal);
