@@ -159,7 +159,7 @@ int didaq_reset_acq(didaq_dev_t * dev)
   dev->capture_ctl.run_ctr_rst = 0;
   dev->capture_ctl.sw_trig = 0;
 
-  didaq_reg_capture_ctl_t strobe ; 
+  didaq_reg_capture_ctl_t strobe;
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
   strobe.event_clr =1;
   strobe.run_ctr_rst = 1;
@@ -254,7 +254,7 @@ int didaq_event_wait(didaq_dev_t * dev, float timeout)
     didaq_reg_capture_stat_t st = {0};
     int ret = didaq_read_CAPTURE_STAT(dev, &st); CHECK(ret);
 
-    if ( st.event_rdy ) 
+    if ( st.event_rdy )
     {
       clock_gettime(CLOCK_REALTIME, &dev->event_ready_time);
       dev->event_ready = 1;
@@ -316,7 +316,7 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   }
 
   //clear the event
-  didaq_reg_capture_ctl_t strobe ; 
+  didaq_reg_capture_ctl_t strobe ;
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
   strobe.event_clr =1;
 
@@ -466,7 +466,7 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
 
   if (!s) return -EINVAL;
   int ret = 0;
-  ret += fprintf(f, "DIDAQ EVENT @ %ld.%09ld (readout %ld.%09ld)\n", 
+  ret += fprintf(f, "DIDAQ EVENT @ %ld.%09ld (readout %ld.%09ld)\n",
       s->meta.ready_time.tv_sec, s->meta.ready_time.tv_nsec, s->meta.readout_time.tv_sec, s->meta.readout_time.tv_nsec);
 
   ret += fprintf(f, "  EVENT_COUNTER: %u\n", s->meta.event_counter);
@@ -550,7 +550,7 @@ int didaq_set_thresholds( didaq_dev_t * dev,
   {
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
-      ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
+       ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
           & ( didaq_reg_coin_thresh_t) {
             .thresh0 = coin->coin_thresholds[chan],
             .thresh1 = coin->coin_thresholds[chan+1]

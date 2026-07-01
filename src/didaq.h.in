@@ -131,20 +131,20 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f);
 int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f);
 
 
-typedef struct didaq_phased_thresholds 
+typedef struct didaq_phased_thresholds
 {
   uint16_t beam_trig_thresholds[DIDAQ_NUM_BEAMS];
   uint16_t beam_servo_thresholds[DIDAQ_NUM_BEAMS];
 } didaq_phased_thresholds_t;
 
-typedef struct didaq_coin_thresholds 
+typedef struct didaq_coin_thresholds
 {
   uint8_t coin_thresholds[DIDAQ_NUM_CHANNELS];
 } didaq_coin_thresholds_t;
 
 
 
-int didaq_set_thresholds( didaq_dev_t * dev, 
+int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin);
 
