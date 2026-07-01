@@ -431,7 +431,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
   ret += fprintf(f, "  capture_stat = { .event_busy = %u, .event_rdy = %u }\n", capture_stat.event_bsy, capture_stat.event_rdy);
   ret += fprintf(f, "  capture_ctl = { .sw_trig = %u, .event_clr = %u, .run_ctr_rst = %u, .pps_en = %u, .ext_en = %u }\n", capture_ctl.sw_trig, capture_ctl.event_clr, capture_ctl.run_ctr_rst, capture_ctl.pps_en, capture_ctl.ext_en);
-  ret += fprintf(f, "  phased_ctl = { .en_trig = %u, .en_trig_to_data = %u, .req_consec_wins = %u, .divide_by_2 = %u, .channel_mask = 0b%b, .beam_mask = 0b%b  } \n; " , 
+  ret += fprintf(f, "  phased_ctl = { .en_trig = %u, .en_trig_to_data = %u, .req_consec_wins = %u, .divide_by_2 = %u, .channel_mask = 0b%b, .beam_mask = 0b%b  }\n" , 
                         dev->phased_ctl.en_trig, dev->phased_ctl.en_trig_to_data, dev->phased_ctl.req_consec_wins, dev->phased_ctl.divide_by_2, dev->phased_ctl.channel_mask, dev->phased_ctl.beam_mask);
   ret += fprintf(f, "  coin_ctl[2] = {\n "
                     "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }, \n "
@@ -485,7 +485,7 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
     {
       char chname[5];
       sprintf(chname,"CH%02d", i);
-      PRINT_ARRAY(f, chname, s->in.len, "%03u", s->wfs[i], ret);
+      PRINT_ARRAY(f, chname, s->in.len, "%u", s->wfs[i], ret);
     }
 
   }
