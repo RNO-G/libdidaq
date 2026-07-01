@@ -196,7 +196,7 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
     dev->coin_ctl[i].en_readout = trig->coinc[i].enable_readout;
     dev->coin_ctl[i].num_coinc = trig->coinc[i].num_required;
     dev->coin_ctl[i].coin_win = trig->coinc[i].coinc_window;
-    dev->coin_ctl[i].include_mask = ~trig->coinc[i].channel_exclude_mask;
+    dev->coin_ctl[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xfff;
     ret = didaq_write_COIN_CTL(dev,i,&dev->coin_ctl[i]); CHECK(ret);
   }
 
