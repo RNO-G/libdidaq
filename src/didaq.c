@@ -363,26 +363,29 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
   for (int i = 0; i < DIDAQ_NUM_CHANNELS; i++)
   {
-    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[i%2];
-    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[i%2];
+    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[(i+1)%2];
+    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[(i+1)%2];
   }
 
   for (int i = 0; i < DIDAQ_NUM_COINC; i++)
   {
-    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[i];
-    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[i];
+    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[1-i];
+    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[1-i];
   }
 
   for (int i = 0; i < DIDAQ_NUM_BEAMS; i++)
   {
-    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[i % 2];
-    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[i % 2];
-    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[i % 2];
+    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i+1) % 2];
+    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i+1) % 2];
+    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i+1) % 2];
   }
 
   scal->num_pps = raw_scalers[41].scalers[0];
-  scal->clk_rate = raw_scalers[47].scalers[0];
-  scal->clk_rate += (raw_scalers[47].scalers[1] << 16);
+  scal->clk_rate = raw_scalers[47].scalers[1];
+  scal->clk_rate += (raw_scalers[47].scalers[0] << 16);
+  scal->total_beam_100mHz = raw_scalers[42].scalers[1];
+  scal->total_beam_100mHz_gated = raw_scalers[42].scalers[0];
+  scal->total_beam_1Hz= raw_scalers[43].scalers[0];
 
   return 0;
 }
@@ -453,6 +456,7 @@ int didaq_dump_scalers(const didaq_scalers_t * s, FILE * f)
   PRINT_ARRAY(f, "BEAM_TRIG_0.1HZ", DIDAQ_NUM_BEAMS, "%05hu", s->beam_trig_100mHz, ret);
   PRINT_ARRAY(f, "BEAM_GATD_0.1HZ", DIDAQ_NUM_BEAMS, "%05hu", s->beam_trig_100mHz_gated, ret);
   PRINT_ARRAY(f, "BEAM_SERVOS_1HZ", DIDAQ_NUM_BEAMS, "%05hu", s->beam_servo_1Hz, ret);
+  ret += fprintf(f," BEAM_TOTAL_1Hz: %hu, BEAM_TOTAL_0.1Hz: %hu, BEAM_TOTAL_0.1Hz_Gated: %hu\n", s->total_beam_1Hz, s->total_beam_100mHz, s->total_beam_100mHz_gated);
 
   return ret;
 }
