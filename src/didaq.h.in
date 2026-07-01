@@ -44,6 +44,9 @@ typedef struct didaq_scalers
   uint16_t beam_trig_100mHz[DIDAQ_NUM_BEAMS];
   uint16_t beam_trig_100mHz_gated[DIDAQ_NUM_BEAMS];
   uint16_t beam_servo_1Hz[DIDAQ_NUM_BEAMS];
+  uint16_t total_beam_100mHz;
+  uint16_t total_beam_100mHz_gated;
+  uint16_t total_beam_1Hz;
   uint16_t num_pps;
   uint32_t clk_rate;
   struct timespec readout_time;
