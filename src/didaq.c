@@ -207,21 +207,22 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
 int didaq_force_trigger(didaq_dev_t * dev)
 {
 
+  if (!dev) return -ENODEV;
   didaq_reg_capture_ctl_t ctl;
   memcpy(&ctl, &dev->capture_ctl, sizeof(ctl));
   ctl.sw_trig = 1;
   int ret = didaq_sched_write_CAPTURE_CTL(dev, &ctl);
-  if (!ret) return ret;
-  //write the version with sw_trig cleared
+  CHECK(ret);  //this can only fail if complete ran
   dev->capture_ctl.sw_trig = 0;
   ret = didaq_sched_write_CAPTURE_CTL(dev, &dev->capture_ctl);
-  if (!ret) return ret;
+  CHECK(ret);
   return didaq_complete(dev);
 }
 
 
 int didaq_event_wait(didaq_dev_t * dev, float timeout)
 {
+  if (!dev) return -ENODEV;
   // use GPIO if we have it
 
   if (dev->trig_rdy.fd)
@@ -275,6 +276,7 @@ int didaq_event_wait(didaq_dev_t * dev, float timeout)
 
 int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
 {
+  if (!dev) return -ENODEV;
   if (!rdout) return -EINVAL;
   if (!dev->event_ready) didaq_event_wait(dev, 0);
   memcpy(&rdout->meta.ready_time, &dev->event_ready_time, sizeof(struct timespec));
@@ -402,6 +404,7 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
 int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 {
+  if (!dev) return -ENODEV;
   (void) flags;
   int ret = 0;
   ret += fprintf(f, "[[DIDAQ at 0x%p]]\n", dev);
@@ -439,6 +442,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
 int didaq_dump_scalers(const didaq_scalers_t * s, FILE * f)
 {
+  if (!s) return -EINVAL;
   int ret =0;
 
   ret += fprintf(f,"DIDAQ Scalers @ %ld.%09ld\n", s->readout_time.tv_sec, s->readout_time.tv_nsec);
@@ -456,6 +460,7 @@ int didaq_dump_scalers(const didaq_scalers_t * s, FILE * f)
 int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
 {
 
+  if (!s) return -EINVAL;
   int ret = 0;
   ret += fprintf(f, "DIDAQ EVENT @ %ld.%09ld (readout %ld.%09ld)\n", 
       s->meta.ready_time.tv_sec, s->meta.ready_time.tv_nsec, s->meta.readout_time.tv_sec, s->meta.readout_time.tv_nsec);
@@ -486,6 +491,8 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
 int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f)
 {
 
+  if (!s) return -EINVAL;
+  if (!f) f = stdout;
   int ret = 0;
   ret += fprintf(f, "DIDAQEVENT\nREADY_TIME, %ld.%09ld\nREADOUT_TIME,%ld.%09ld\n",
       s->meta.ready_time.tv_sec, s->meta.ready_time.tv_nsec, s->meta.readout_time.tv_sec, s->meta.readout_time.tv_nsec);
@@ -517,6 +524,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin)
 {
+  if (!dev) return -ENODEV;
+  if (!phased && !coin) return 0;
   int ret = 0;
 
   if (phased)
@@ -530,7 +539,10 @@ int didaq_set_thresholds( didaq_dev_t * dev,
            });
       CHECK(ret);
     }
+  }
 
+  if (coin)
+  {
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
       ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
