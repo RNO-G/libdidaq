@@ -262,3 +262,39 @@ int didaq_write_##NAME( didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR)  const T 
 DIDAQ_REGS(DIDAQ_READ_FNS_IMPL)
 DIDAQ_REGS(DIDAQ_WRITE_FNS_IMPL)
 
+
+int didaq_sched_sysaccess_write(didaq_dev_t * dev, uint32_t address, uint32_t data)
+{
+  int ret = 0;
+  ret = didaq_sched_write_SYSACC_ADDR(dev, &address);
+  if (ret) return ret;
+  ret = didaq_sched_write_SYSACC_WRDA(dev, &data);
+  if (ret) return ret;
+
+  const uint32_t sysacc_write_req = 2;
+  return  didaq_sched_write_SYSACC_CTL(dev, &sysacc_write_req);
+}
+
+int didaq_sysaccess_write(didaq_dev_t * dev, uint32_t addr, uint32_t da)
+{
+  return didaq_sched_sysaccess_write(dev,addr,da) || didaq_complete(dev);
+}
+
+
+int didaq_sched_sysaccess_read(didaq_dev_t * dev, uint32_t address, uint32_t * data)
+{
+  int ret = 0;
+  ret = didaq_sched_write_SYSACC_ADDR(dev, &address);
+  if (ret) return ret;
+  const uint32_t sysacc_read_req = 1;
+  ret = didaq_sched_write_SYSACC_CTL(dev, &sysacc_read_req);
+  if (ret) return ret;
+  return  didaq_sched_read_SYSACC_RDDA(dev, data);
+}
+
+int didaq_sysaccess_read(didaq_dev_t * dev, uint32_t addr, uint32_t *da)
+{
+  return didaq_sched_sysaccess_read(dev,addr,da) || didaq_complete(dev);
+}
+
+

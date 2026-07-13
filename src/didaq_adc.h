@@ -1,0 +1,116 @@
+#ifndef _DIDAQ_ADC_H
+#define _DIDAQ_ADC_H
+
+
+/* DIDAQ ADC REGS */
+
+#include <stdint.h>
+#include "didaq.h"
+
+#define DIDAQ_NUM_ADC 6
+
+#define DIDAQ_SPI_HOST_ADDRESS 0x01020000
+
+
+enum e_didaq_adc_reg
+{
+  DIDAQ_ADC_REG_CONFIG_A      =   0x000,
+  DIDAQ_ADC_REG_DEVICE_CONFIG =   0x002,
+  DIDAQ_ADC_REG_VENDOR_ID     =   0x00C,
+  DIDAQ_ADC_REG_USR0          =   0x010,
+  DIDAQ_ADC_REG_CLK_CTRL0     =   0x029,
+  DIDAQ_ADC_REG_CLK_CTRL1     =   0x02A,
+  DIDAQ_ADC_REG_CLK_CTRL2     =   0x02B,
+  DIDAQ_ADC_REG_SYSREF_POS    =   0x02C,
+  DIDAQ_ADC_REG_FS_RANGE      =   0x030,
+  DIDAQ_ADC_REG_LOW_POWER1    =   0x037,
+  DIDAQ_ADC_REG_TMSTP_CTRL    =   0x03B,
+  DIDAQ_ADC_REG_PLLREFO_CTRL  =   0x03C,
+  DIDAQ_ADC_REG_CPLL_FBDIV1   =   0x03D,
+  DIDAQ_ADC_REG_CPLL_FBDIV2   =   0x03E,
+  DIDAQ_ADC_REG_CPLL_VCOCTRL1 =   0x03F,
+  DIDAQ_ADC_REG_SER_PE        =   0x048,
+  DIDAQ_ADC_REG_TRIGOUT_CTRL  =   0x057,
+  DIDAQ_ADC_REG_CPLL_OVR      =   0x058,
+  DIDAQ_ADC_REG_VCO_FREQ_TRIM =   0x059,
+  DIDAQ_ADC_REG_CPLL_RESET    =   0x05C,
+  DIDAQ_ADC_REG_VCO_CAL_CTRL  =   0x05D,
+  DIDAQ_ADC_REG_VCO_CAL_STATUS=   0x05E,
+  DIDAQ_ADC_REG_CAL_EN        =   0x061,
+  DIDAQ_ADC_REG_CAL_CFG0      =   0x062,
+  DIDAQ_ADC_REG_CAL_CFG1      =   0x065,
+  DIDAQ_ADC_REG_CAL_AVG       =   0x068,
+  DIDAQ_ADC_REG_CAL_STATUS    =   0x06A,
+  DIDAQ_ADC_REG_CAL_PIN_CFG   =   0x06B,
+  DIDAQ_ADC_REG_CAL_SOFT_TRIG =   0x06C,
+  DIDAQ_ADC_REG_CAL_LP        =   0x06E,
+  DIDAQ_ADC_REG_GAIN_TRIM     =   0x07A,
+  DIDAQ_ADC_REG_BG_TRIM       =   0x07C,
+  DIDAQ_ADC_REG_RTRIM_A       =   0x07E,
+  DIDAQ_ADC_REG_RTRIM_B       =   0x07F,
+  DIDAQ_ADC_REG_RTRIM_C       =   0x080,
+  DIDAQ_ADC_REG_RTRIM_D       =   0x081,
+  DIDAQ_ADC_REG_ADC_SRC_DLY   =   0x09A,
+  DIDAQ_ADC_REG_MUX_SEL_DLY   =   0x09B,
+  DIDAQ_ADC_REG_ADC_DITH      =   0x09D,
+  DIDAQ_ADC_REG_LSB_CTRL      =   0x160,
+  DIDAQ_ADC_REG_JESD_EN       =   0x200,
+  DIDAQ_ADC_REG_JMODE         =   0x201,
+  DIDAQ_ADC_REG_KM1           =   0x202,
+  DIDAQ_ADC_REG_JSYNC_N       =   0x203,
+  DIDAQ_ADC_REG_JCTRL         =   0x204,
+  DIDAQ_ADC_REG_JTEST         =   0x205,
+  DIDAQ_ADC_REG_DID           =   0x206,
+  DIDAQ_ADC_REG_FCHAR         =   0x207,
+  DIDAQ_ADC_REG_JESD_STATUS   =   0x208,
+  DIDAQ_ADC_REG_CH_EN         =   0x209,
+  DIDAQ_ADC_REG_SHMODE        =   0x20F,
+  DIDAQ_ADC_REG_SYNC_THRESH   =   0x210,
+  DIDAQ_ADC_REG_OVR_TH        =   0x211,
+  DIDAQ_ADC_REG_OVR_CFG       =   0x213,
+  DIDAQ_ADC_REG_INIT_STATUS   =   0x270,
+  DIDAQ_ADC_REG_LOW_POWER2    =   0x29A,
+  DIDAQ_ADC_REG_LOW_POWER3    =   0x29B,
+  DIDAQ_ADC_REG_LOW_POWER4    =   0x29C,
+  DIDAQ_ADC_REG_ALARM         =   0x2C0,
+  DIDAQ_ADC_REG_ALM_STATUS    =   0x2C1,
+  DIDAQ_ADC_REG_ALM_MASK      =   0x2C2,
+  DIDAQ_ADC_REG_FIFO_LANE_ALM =   0x2C4,
+  DIDAQ_ADC_REG_OFS0          =   0x330,
+  DIDAQ_ADC_REG_OFS1          =   0x332,
+  DIDAQ_ADC_REG_OFS2A         =   0x334,
+  DIDAQ_ADC_REG_OFS2B         =   0x336,
+  DIDAQ_ADC_REG_OFS3C         =   0x338,
+  DIDAQ_ADC_REG_OFS3D         =   0x33A,
+  DIDAQ_ADC_REG_OFS4          =   0x33C,
+  DIDAQ_ADC_REG_OFS5          =   0x33E,
+  DIDAQ_ADC_REG_GAIN0         =   0x360,
+  DIDAQ_ADC_REG_GAIN1         =   0x361,
+  DIDAQ_ADC_REG_GAIN2A        =   0x362,
+  DIDAQ_ADC_REG_GAIN2B        =   0x363,
+  DIDAQ_ADC_REG_GAIN3C        =   0x364,
+  DIDAQ_ADC_REG_GAIN3D        =   0x365,
+  DIDAQ_ADC_REG_GAIN4         =   0x366,
+  DIDAQ_ADC_REG_GAIN5         =   0x367
+};
+
+
+enum e_didaq_spi_core_addr  {
+  DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | (0x00 << 2),
+  DIDAQ_SPI_ADR_SETNGS_0 = DIDAQ_SPI_HOST_ADDRESS  | (0x03 << 2),
+  DIDAQ_SPI_ADR_SETNGS_1 = DIDAQ_SPI_HOST_ADDRESS  | (0x04 << 2),
+  DIDAQ_SPI_ADR_CTRL     = DIDAQ_SPI_HOST_ADDRESS  | (0x05 << 2),
+  DIDAQ_SPI_ADR_ACTION   = DIDAQ_SPI_HOST_ADDRESS  | (0x07 << 2),
+  DIDAQ_SPI_ADR_TX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | (0x08 << 2),
+  DIDAQ_SPI_ADR_RX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | (0x0A << 2),
+  DIDAQ_SPI_ADR_RX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | (0x0B << 2)
+};
+
+
+int didaq_adc_sched_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t value);
+int didaq_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t value);
+int didaq_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t * value);
+
+
+
+#endif

@@ -56,6 +56,8 @@ struct didaq_dev
   // pipeline buffers
   DIDAQ_REGS(DIDAQ_PIPELINED_BUFFERS)
 
+  //start at -1 to indicate nothing selected
+  int selected_adc;
 
 };
 

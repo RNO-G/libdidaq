@@ -233,5 +233,11 @@ DIDAQ_REGS(DIDAQ_READ_FNS)
 DIDAQ_REGS(DIDAQ_WRITE_FNS)
 
 
+int didaq_sched_sysaccess_write(didaq_dev_t * dev, uint32_t address, uint32_t data);
+int didaq_sched_sysaccess_read(didaq_dev_t * dev, uint32_t address, uint32_t * data);
+
+int didaq_sysaccess_write(didaq_dev_t * dev, uint32_t address, uint32_t data);
+int didaq_sysaccess_read(didaq_dev_t * dev, uint32_t address, uint32_t * data);
+
 
 #endif
