@@ -1,6 +1,8 @@
 #include "didaq.h"
 #include <stdlib.h>
 
+#define LEN 768
+
 int main (int nargs, char ** args)
 {
   didaq_setup_t setup = { 
@@ -18,9 +20,9 @@ int main (int nargs, char ** args)
   didaq_reset_acq(dev);
 
 
-  static uint8_t wfs[DIDAQ_NUM_CHANNELS][512];
+  static uint8_t wfs[DIDAQ_NUM_CHANNELS][LEN];
 
-  didaq_event_readout_t rdout = { .in  = {.len = 768, .start = 384}, .wfs = 
+  didaq_event_readout_t rdout = { .in  = {.len = LEN, .start = 384}, .wfs = 
     { 
       wfs[0], wfs[1], wfs[2], wfs[3], wfs[4], wfs[5],
       wfs[6], wfs[7], wfs[8], wfs[9], wfs[10], wfs[11],
