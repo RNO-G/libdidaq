@@ -21,7 +21,7 @@ struct
 
 void usage()
 {
-  printf("Usage: didaq-adc-reg [-d DEVICE]  { [@IADC],[w0xADDR 0xVAL],[r0xADDR] } ... \n  e.g. @0 sets ADC to 0. w0x100 0x50 writes 0x50 to register 0x100 on current ADC)");
+  printf("Usage: didaq-adc-reg [-d DEVICE]  { [@IADC],[w0xADDR 0xVAL],[r0xADDR] } ... \n  e.g. @0 sets ADC to 0. w0x100 0x50 writes 0x50 to register 0x100 on current ADC)\n");
 }
 
 int main (int nargs, char **args)
@@ -104,21 +104,25 @@ int main (int nargs, char **args)
   didaq_dev_t * dev = didaq_open(&setup);
 
 
+  if (! nops)
+  {
+    usage();
+  }
   for (int iop = 0; iop < nops; iop++)
   {
     int ret = 0;
 
     if (ops[iop].write) 
     {
-      printf("Writing 0x%hhx to reg 0x%hu on adc%d\n", ops[iop].val, ops[iop].addr, ops[iop].adc);
+      printf("Writing 0x%hhx to reg 0x%hx on adc%d\n", ops[iop].val, ops[iop].addr, ops[iop].adc);
       ret = didaq_adc_sched_reg_write(dev,ops[iop].adc, ops[iop].addr, ops[iop].val);
     }
     else
     {
-      printf("Reading reg 0x%hu on adc%d: \n", ops[iop].addr, ops[iop].adc);
+      printf("Reading reg 0x%hx on adc%d: \n", ops[iop].addr, ops[iop].adc);
       uint8_t val = 0;
       ret = didaq_adc_reg_read(dev,ops[iop].adc, ops[iop].addr, &val);
-      if (!ret) printf(" result: 0x%hhu\n", val);
+      if (!ret) printf(" result: 0x%hhx\n", val);
     }
 
     if (ret) 
