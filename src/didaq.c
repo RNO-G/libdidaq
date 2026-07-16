@@ -123,6 +123,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   didaq_sched_read_COIN_CTL(dev,0, &dev->coin_ctl[0]);
   didaq_sched_read_COIN_CTL(dev,1, &dev->coin_ctl[1]);
   didaq_complete(dev);
+  dev->selected_adc = -1;
 
   return dev;
 }
