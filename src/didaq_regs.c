@@ -144,6 +144,28 @@ int didaq_complete(didaq_dev_t * dev)
   errno = 0;
   int ret = ioctl(dev->spi_fd, SPI_IOC_MESSAGE(dev->nxfers), dev->xfers);
 
+#ifdef DIDAQ_SPI_DEBUG
+  printf(" ::::: didaq_complete called with DIDAQ_SPI_DEBUG ret = %d::::::\n", ret);
+  for (int i = 0; i < dev->nxfers; i++)
+  {
+    printf( " [TXN %d, LEN=%d, RXBUF=%p TXBUF=%p ]\n", i, dev->xfers[i].len, dev->xfers[i].rx_buf, dev->xfers[i].tx_buf);
+    if (dev->xfers[i].rx_buf)
+    {
+      printf("RX:");
+      uint8_t * rx = (uint8_t*) dev->xfers[i].rx_buf;
+      for (int j = 0; j < dev->xfers[i].len; j++) printf (" %02hhx", rx[j]);
+      printf("\n");
+    }
+    if (dev->xfers[i].tx_buf)
+    {
+      printf("TX:");
+      uint8_t * tx = (uint8_t*) dev->xfers[i].tx_buf;
+      for (int j = 0; j < dev->xfers[i].len; j++) printf (" %02hhx", tx[j]);
+      printf("\n");
+    }
+  }
+#endif
+
   defer { dev->nxfers = 0; }
   defer { dev->spi_bufsiz = 0; }
 
