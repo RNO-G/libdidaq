@@ -32,6 +32,8 @@ typedef struct didaq_setup
   bool pipeline_reads;
   FILE * err_out;  //if NULL, will use stderr
   int dbg;
+  uint16_t default_len;  //used if didaq_event_readout in.len = 0, if 0, 768 is used.
+  uint16_t default_start; //used if didaq_event_readout in.len = 0 
 } didaq_setup_t;
 
 typedef struct didaq_scalers
@@ -59,7 +61,7 @@ typedef struct didaq_event_readout
 {
   struct
   {
-    uint16_t len; //will be truncated to mulitple of 4
+    uint16_t len; //will be truncated to mulitple of 4. If 0, default len AND start will be used.
     uint16_t start; //will be truncated to multiple of 4
   } in;
 

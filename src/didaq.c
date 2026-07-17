@@ -283,8 +283,11 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   memcpy(&rdout->meta.ready_time, &dev->event_ready_time, sizeof(struct timespec));
 
   //set defaults if nothing provided
-  if (!rdout->in.len) rdout->in.len = 1024;
-  if (!rdout->in.start) rdout->in.start = 1536;
+  if (!rdout->in.len)
+  {
+    rdout->in.len = dev->setup.default_len ?: 768;
+    rdout->in.start = dev->setup.default_start;
+  }
 
   int ret = 0;
   ret = didaq_sched_read_LAST_EVT_CTR(dev, &rdout->meta.event_counter); CHECK(ret);
