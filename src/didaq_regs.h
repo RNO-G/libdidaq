@@ -139,7 +139,8 @@ typedef struct
   uint32_t en_module   : 1;
   uint32_t en_readout  : 1;
   uint32_t num_coinc   : 3;
-  uint32_t __pad0      : 3;
+  uint32_t quad_mode   : 1;
+  uint32_t __pad0      : 2;
   uint32_t coin_win    : 4;
   uint32_t __pad1      : 4;
   uint32_t include_mask: 12;

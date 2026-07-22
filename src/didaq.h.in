@@ -107,6 +107,7 @@ typedef struct didaq_trigger_setup
   {
     bool enable; // enable computation of the trigger
     bool enable_readout;  //readout on trigger
+    bool quad_mode;
     uint8_t num_required : 3; // Number of channels required for coincidence (0-7), 
     uint8_t coinc_window : 4 ;  // 8-ns cycles, 0-15
     uint16_t channel_exclude_mask : ( DIDAQ_NUM_BEAMS / DIDAQ_NUM_COINC);  //12 bit mask, 0 to include all
