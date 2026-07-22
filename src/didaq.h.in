@@ -72,6 +72,7 @@ typedef struct didaq_event_readout
     uint32_t dead_counter;
     uint32_t clk_cycles;
     uint16_t pps_counter;
+    uint16_t last_beam_pattern;
     uint32_t last_coinc_pattern;
     uint8_t trig_type;
     struct timespec ready_time;

@@ -290,15 +290,24 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   }
 
   int ret = 0;
+  didaq_reg_pps_counter_t pps_counter = {0};
+  didaq_reg_misc0_t misc0 = {0};
+  didaq_reg_misc1_t misc1 = {0};
+  didaq_reg_meta_trig_t meta_trig =  { 0};
+
   ret = didaq_sched_read_LAST_EVT_CTR(dev, &rdout->meta.event_counter); CHECK(ret);
   ret = didaq_sched_read_LAST_TRIG_CTR(dev, &rdout->meta.trig_counter); CHECK(ret);
   ret = didaq_sched_read_LAST_DEAD_CTR(dev, &rdout->meta.dead_counter); CHECK(ret);
   ret = didaq_sched_read_LAST_CLK_CTR(dev, &rdout->meta.clk_cycles); CHECK(ret);
-  ret = didaq_sched_read_LAST_PPS_CTR(dev, &rdout->meta.pps_counter); CHECK(ret);
-  ret = didaq_sched_read_LAST_MISC0(dev, &rdout->meta.last_coinc_pattern); CHECK(ret);
-  didaq_reg_meta_trig_t meta_trig =  { 0};
+  ret = didaq_sched_read_LAST_PPS_CTR(dev, &pps_counter); CHECK(ret);
+  ret = didaq_sched_read_LAST_MISC0(dev, &misc0); CHECK(ret);
+  ret = didaq_sched_read_LAST_MISC1(dev, &misc1); CHECK(ret);
   ret = didaq_sched_read_LAST_TRIG(dev, &meta_trig); CHECK(ret);
 
+
+  rdout->meta.pps_counter = pps_counter.pps;
+  rdout->meta.last_coinc_pattern = misc0.last_coincidence_pattern;
+  rdout->meta.last_beam_pattern = misc1.last_beam_pattern;
 
   didaq_reg_rdout_ctl_t rdout_ctl = {.start_rd_addr = rdout->in.start / 4};
 
@@ -387,8 +396,8 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   scal->num_pps = raw_scalers[41].scalers[0];
   scal->clk_rate = raw_scalers[47].scalers[1];
   scal->clk_rate += (raw_scalers[47].scalers[0] << 16);
-  scal->total_beam_100mHz = raw_scalers[42].scalers[1];
-  scal->total_beam_100mHz_gated = raw_scalers[42].scalers[0];
+  scal->total_beam_100mHz = raw_scalers[42].scalers[0];
+  scal->total_beam_100mHz_gated = raw_scalers[42].scalers[1];
   scal->total_beam_1Hz= raw_scalers[43].scalers[0];
 
   return 0;
