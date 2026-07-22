@@ -33,7 +33,7 @@ typedef struct didaq_setup
   FILE * err_out;  //if NULL, will use stderr
   int dbg;
   uint16_t default_len;  //used if didaq_event_readout in.len = 0, if 0, 768 is used.
-  uint16_t default_start; //used if didaq_event_readout in.len = 0 
+  uint16_t default_start; //used if didaq_event_readout in.len = 0
 } didaq_setup_t;
 
 typedef struct didaq_scalers
@@ -108,9 +108,9 @@ typedef struct didaq_trigger_setup
     bool enable; // enable computation of the trigger
     bool enable_readout;  //readout on trigger
     bool quad_mode;
-    uint8_t num_required : 3; // Number of channels required for coincidence (0-7), 
+    uint8_t num_required : 3; // Number of channels required for coincidence (0-7),
     uint8_t coinc_window : 4 ;  // 8-ns cycles, 0-15
-    uint16_t channel_exclude_mask : ( DIDAQ_NUM_BEAMS / DIDAQ_NUM_COINC);  //12 bit mask, 0 to include all
+    uint16_t channel_exclude_mask : (DIDAQ_NUM_CHANNELS / DIDAQ_NUM_COINC);  //12 bit mask, 0 to include all
   } coinc[DIDAQ_NUM_COINC];
 
   struct
