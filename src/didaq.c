@@ -578,7 +578,7 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 }
 
 
-uint32_t didaq_get_clock_rate_estiamte(didaq_dev_t * d)
+uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 {
   return d->clock_estimate;
 }
