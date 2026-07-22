@@ -50,7 +50,7 @@ static int didaq_adc_sched_reg_rw(didaq_dev_t * dev, bool write, uint8_t iadc, u
     while (rx_bytes > 0)
     {
       uint32_t ignored = 0;
-      ret = didaq_sched_sysaccess_read(dev, DIDAQ_SPI_ADR_RX_DATA, &value);
+      ret = didaq_sched_sysaccess_read(dev, DIDAQ_SPI_ADR_RX_DATA, &ignored);
       CHECK (ret);
       ret = didaq_sysaccess_read(dev, DIDAQ_SPI_ADR_RX_NUM, &rx_bytes);
       CHECK(ret);
