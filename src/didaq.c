@@ -396,7 +396,7 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
   scal->num_pps = raw_scalers[41].scalers[0];
   scal->clk_rate = raw_scalers[47].scalers[1] <<16;
-  scal->clk_rate += (raw_scalers[47].scalers[0];
+  scal->clk_rate += raw_scalers[47].scalers[0];
   scal->total_beam_100mHz = raw_scalers[42].scalers[0];
   scal->total_beam_100mHz_gated = raw_scalers[42].scalers[1];
   scal->total_beam_1Hz= raw_scalers[43].scalers[0];
