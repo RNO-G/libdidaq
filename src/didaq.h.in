@@ -61,7 +61,7 @@ typedef struct didaq_event_readout
 {
   struct
   {
-    uint16_t len; //will be truncated to mulitple of 4. If 0, default len AND start will be used.
+    uint16_t len; //will be truncated to multiple of 4. If 0, default len AND start will be used.
     uint16_t start; //will be truncated to multiple of 4
   } in;
 
