@@ -59,6 +59,8 @@ struct didaq_dev
   //start at -1 to indicate nothing selected
   int selected_adc;
 
+  uint32_t clock_estimate;
+
 };
 
 
