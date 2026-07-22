@@ -124,6 +124,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   didaq_sched_read_COIN_CTL(dev,1, &dev->coin_ctl[1]);
   didaq_complete(dev);
   dev->selected_adc = -1;
+  dev->clock_estimate = 250000000;
 
   return dev;
 }
@@ -394,8 +395,8 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   }
 
   scal->num_pps = raw_scalers[41].scalers[0];
-  scal->clk_rate = raw_scalers[47].scalers[1];
-  scal->clk_rate += (raw_scalers[47].scalers[0] << 16);
+  scal->clk_rate = raw_scalers[47].scalers[1] <<16;
+  scal->clk_rate += (raw_scalers[47].scalers[0];
   scal->total_beam_100mHz = raw_scalers[42].scalers[0];
   scal->total_beam_100mHz_gated = raw_scalers[42].scalers[1];
   scal->total_beam_1Hz= raw_scalers[43].scalers[0];
