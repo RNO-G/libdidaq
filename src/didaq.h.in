@@ -55,6 +55,19 @@ typedef struct didaq_scalers
 } didaq_scalers_t;
 
 
+
+enum
+{
+  DIDAQ_TRIGGER_SOFT = 1 << 0,
+  DIDAQ_TRIGGER_PHASED = 1 << 1,
+  DIDAQ_TRIGGER_COINC1 = 1 << 2,
+  DIDAQ_TRIGGER_COINC0 = 1 << 3,
+  DIDAQ_TRIGGER_EXT = 1 << 4,
+  DIDAQ_TRIGGER_PPS = 1 << 5
+} e_didaq_trig;
+
+
+
 /** Setup for event readout
  **/
 typedef struct didaq_event_readout
