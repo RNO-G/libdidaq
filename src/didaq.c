@@ -491,6 +491,7 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
   ret += fprintf(f, "  CLK_CYCLES:    %u\n", s->meta.clk_cycles);
   ret += fprintf(f, "  PPS_COUNTER:   %hu\n", s->meta.pps_counter);
   ret += fprintf(f, "  LAST_COIN_PAT: %x\n", s->meta.last_coinc_pattern);
+  ret += fprintf(f, "  LAST_BEAM_PAT: %x\n", s->meta.last_beam_pattern);
   ret += fprintf(f, "  TRIG_TYPE:     %hhx\n", s->meta.trig_type);
   ret += fprintf(f, "  START_SAMPLE:  %hu\n", s->in.start);
   ret += fprintf(f, "  NUM_SAMPLES:   %hu\n", s->in.len);
