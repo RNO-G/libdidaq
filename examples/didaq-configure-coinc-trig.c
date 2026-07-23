@@ -27,7 +27,7 @@ didaq_trigger_setup_t s = {
 			.enable_readout = true,
       .num_required = 2,
       .coinc_window = 2,
-			quad_mode = 1
+			.quad_mode = 1
     }
   }
 };
@@ -65,12 +65,12 @@ int main (int nargs, char ** args)
     else if (!strcmp(args[i],"-e") && i< nargs-1)
     {
       uint32_t enables = strtoul(args[++i], 0, 0);
-      s.coinc[0].enable = (enables & 0x1 == 1);
-      s.coinc[1].enable = (enables & 0x2 == 2);
+      s.coinc[0].enable = ((enables & 0x1) == 1);
+      s.coinc[1].enable = ((enables & 0x2) == 2);
     }
     else if (strcmp(args[i], "-t") == 0) {
         // Read following arguments until another flag or end of argv
-        while (i + 1 < argc && args[i + 1][0] != '-') {
+        while (i + 1 < nargs && args[i + 1][0] != '-') {
             i++; // Move index to the number string
             
             // Convert string to integer securely using strtol
@@ -103,12 +103,12 @@ int main (int nargs, char ** args)
 
 	for (int j = 0; j < DIDAQ_NUM_CHANNELS; j++) 
 	{
-		if (j < 4) th.coin_thresholds[j] = thresh[j];
-		else th.coinc_thresholds[j] = 255;
+		if (j < 4) th.coin_thresholds[j] = channel_thresh[j];
+		else th.coin_thresholds[j] = 255;
 	}
 
 	didaq_set_thresholds(dev, 0, &th);
-	printf("Using threshold of %d, %d, %d, %d\n", thresh[0], thresh[1], thresh[2], thresh[3]);
+	printf("Using threshold of %d, %d, %d, %d\n", channel_thresh[0], channel_thresh[1], channel_thresh[2], channel_thresh[3]);
 
 	sleep(10);
 	didaq_read_scalers(dev, &scal);
