@@ -17,7 +17,9 @@ VERSIONED_LIB = $(LIB).$(VER_MAJOR).$(VER_MINOR).$(VER_REV)
 NAMED_LIB = $(LIB).$(VER_MAJOR)
 
 SRC=src/didaq_regs.c src/didaq.c src/didaq_adc.c
-EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs examples/didaq-wfs-csv examples/didaq-coin-thresh-scan examples/didaq-beam-thresh-scan examples/didaq-adc-reg
+EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs \
+	examples/didaq-wfs-csv examples/didaq-coin-thresh-scan examples/didaq-beam-thresh-scan \
+	examples/didaq-adc-reg examples/didaq-configure-coinc-trig examples/didaq-configure-phased-trig
 OBJS = $(SRC:.c=.o)
 INC_PUBLIC=src/didaq.h src/didaq_regs.h src/didaq_adc.h
 LINKLIBS=-ldidaq -lgpios
