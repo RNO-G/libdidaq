@@ -16,7 +16,7 @@ didaq_trigger_setup_t s = {
   }
 };
 
-int thresh = 1000; 
+int thresh[DIDAQ_NUM_BEAMS] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
 double servo_frac = 0.8;
 
 
@@ -52,7 +52,20 @@ int main (int nargs, char ** args)
     }
     else if (!strcmp(args[i],"-t") && i < nargs-1)
     {
-      thresh = strtoul(args[++i], 0, 0);
+
+      int all_thresh = strtoul(args[++i], 0, 0);
+      for (int j = 0; j < DIDAQ_NUM_BEAMS; j++)
+      {
+        thresh[j] = all_thresh;
+      }
+
+    }
+    else if (!strcmp(args[i],"-T") && i < nargs-2)
+    {
+
+      int beam = strtoul(args[++i], 0, 0);
+      int thr= strtoul(args[++i], 0, 0);
+      thresh[beam] = thr;
     }
     else if (!strcmp(args[i],"-f") && i < nargs-1)
     {
@@ -61,7 +74,7 @@ int main (int nargs, char ** args)
     else
     {
 
-      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -2 -c] [ -B meam mask ] [ -C channel_mask ] [-t THRESH] [-f servo_frac] \n");
+      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -2 -c] [ -B meam mask ] [ -C channel_mask ] [-t THRESH] [-T BEAM THRESH] [-f servo_frac] \n");
 
       return 0;
     }
@@ -83,11 +96,14 @@ int main (int nargs, char ** args)
 
 	for (int j = 0; j < DIDAQ_NUM_BEAMS; j++)
 	{
-			th.beam_trig_thresholds[j] = thresh;
-			th.beam_servo_thresholds[j] = thresh* servo_frac;
+			th.beam_trig_thresholds[j] = thresh[j];
+			th.beam_servo_thresholds[j] = thresh[j]* servo_frac;
 	}
 	didaq_set_thresholds(dev, &th, 0);
-	printf("Using threshold of %d\n", thresh);
+	printf("Using thresholds of [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
+      thresh[0], thresh[1], thresh[2], thresh[3], thresh[4],
+      thresh[5], thresh[6], thresh[7], thresh[8], thresh[9]
+      );
 
 	sleep(10);
 	didaq_read_scalers(dev, &scal);
