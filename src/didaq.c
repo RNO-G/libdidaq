@@ -255,7 +255,9 @@ int didaq_event_wait(didaq_dev_t * dev, float timeout)
   while (true)
   {
     didaq_reg_capture_stat_t st = {0};
+    if (dev->setup.poll_mutex) pthread_mutex_lock(dev->setup.poll_mutex);
     int ret = didaq_read_CAPTURE_STAT(dev, &st); CHECK(ret);
+    if (dev->setup.poll_mutex) pthread_mutex_unlock(dev->setup.poll_mutex);
 
     if ( st.event_rdy )
     {

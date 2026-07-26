@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
 /** didaq api */
 typedef struct didaq_dev didaq_dev_t;
@@ -34,6 +35,7 @@ typedef struct didaq_setup
   int dbg;
   uint16_t default_len;  //used if didaq_event_readout in.len = 0, if 0, 768 is used.
   uint16_t default_start; //used if didaq_event_readout in.len = 0
+  pthread_mutex_t * poll_mutex; // mutex to hold while polling if using spi
 } didaq_setup_t;
 
 typedef struct didaq_scalers
