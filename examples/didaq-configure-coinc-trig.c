@@ -70,6 +70,7 @@ int main (int nargs, char ** args)
     }
     else if (strcmp(args[i], "-t") == 0) {
         // Read following arguments until another flag or end of argv
+        int count = 0;
         while (i + 1 < nargs && args[i + 1][0] != '-') {
             i++; // Move index to the number string
             
