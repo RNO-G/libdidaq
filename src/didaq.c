@@ -556,7 +556,7 @@ int didaq_set_thresholds( didaq_dev_t * dev,
   {
     for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
     {
-      ret = didaq_sched_write_BEAM_THRESH(dev, beam,
+      ret = didaq_sched_write_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 -beam, // seem to be backwards?
           & (didaq_reg_phas_thresh_t) {
            .trig = phased->beam_trig_thresholds[beam],
            .servo = phased->beam_servo_thresholds[beam]
