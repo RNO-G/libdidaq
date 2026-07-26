@@ -378,21 +378,21 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
   for (int i = 0; i < DIDAQ_NUM_CHANNELS; i++)
   {
-    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[(i+1)%2];
-    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[(i+1)%2];
+    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[(i)%2];
+    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[(i)%2];
   }
 
   for (int i = 0; i < DIDAQ_NUM_COINC; i++)
   {
-    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[1-i];
-    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[1-i];
+    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[i];
+    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[i];
   }
 
   for (int i = 0; i < DIDAQ_NUM_BEAMS; i++)
   {
-    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i+1) % 2];
-    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i+1) % 2];
-    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i+1) % 2];
+    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i) % 2];
+    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i) % 2];
+    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i) % 2];
   }
 
   scal->num_pps = raw_scalers[41].scalers[0];
