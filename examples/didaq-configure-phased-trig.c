@@ -105,7 +105,8 @@ int main (int nargs, char ** args)
       thresh[5], thresh[6], thresh[7], thresh[8], thresh[9]
       );
 
-	sleep(10);
+  printf("Sleeping for 20 seconds to get a good read\n");
+	sleep(20);
 	didaq_read_scalers(dev, &scal);
 	didaq_dump_scalers(&scal,stdout);
 
