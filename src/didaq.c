@@ -543,6 +543,73 @@ int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f)
 }
 
 
+
+int didaq_get_thresholds( didaq_dev_t * dev,
+                          didaq_phased_thresholds_t * phased,
+                          didaq_coin_thresholds_t * coin,
+                          bool force)
+{
+
+  int ret = 0;
+
+  if (phased)
+  {
+
+    if (force || !dev->cached_phased_init)
+    {
+
+      didaq_reg_phas_thresh_t t[DIDAQ_NUM_BEAMS];
+
+      for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
+      {
+        ret = didaq_sched_read_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 - beam, &t[beam]);
+        CHECK(ret);
+      }
+
+      ret = didaq_complete(dev); CHECK(ret);
+      for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
+      {
+        phased->beam_trig_thresholds[beam] = t[beam].trig;
+        phased->beam_servo_thresholds[beam] = t[beam].servo;
+      }
+    }
+    else
+    {
+      memcpy(phased, &dev->cached_phased_thresholds, sizeof(*phased));
+    }
+  }
+
+  if (coin)
+  {
+
+    if (force || !dev->cached_coin_init)
+    {
+
+      didaq_reg_coin_thresh_t t[DIDAQ_NUM_CHANNELS/2];
+
+      for (int chpair = 0; chpair < countof(t); chpair++)
+      {
+        ret = didaq_sched_read_COIN_THRESH(dev, chpair, &t[chpair]);
+        CHECK(ret);
+      }
+
+      ret = didaq_complete(dev); CHECK(ret);
+
+      for (int ch = 0; ch < DIDAQ_NUM_CHANNELS; ch+=2)
+      {
+        coin->coin_thresholds[ch] = t[ch/2].thresh0;
+        coin->coin_thresholds[ch+1] = t[ch/2].thresh1;
+      }
+    }
+    else
+    {
+      memcpy(coin, &dev->cached_coin_thresholds, sizeof(*coin));
+    }
+  }
+
+  return 0;
+}
+
 int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin)
@@ -554,6 +621,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 
   if (phased)
   {
+    memcpy(&dev->cached_phased_thresholds, phased, sizeof(*phased));
+    dev->cached_phased_init = true;
     for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
     {
       ret = didaq_sched_write_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 -beam, // seem to be backwards?
@@ -567,6 +636,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 
   if (coin)
   {
+    memcpy(&dev->cached_coin_thresholds, coin, sizeof(*coin));
+    dev->cached_coin_init = true;
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
        ret = didaq_sched_write_COIN_THRESH(dev, chan /2,

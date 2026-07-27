@@ -167,6 +167,13 @@ int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin);
 
+// this may be cached unles force_read = true
+int didaq_get_thresholds( didaq_dev_t * dev,
+                          didaq_phased_thresholds_t * phased,
+                          didaq_coin_thresholds_t * coin, 
+                          bool force_read);
+
+
 
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
