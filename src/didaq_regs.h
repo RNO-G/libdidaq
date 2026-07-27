@@ -13,7 +13,6 @@
 #include "didaq.h"
 
 
-
 /**
  * Completes all scheduled transactions  that were scheduled using the sched form of register functions.
  * @param dev the didaq device
@@ -81,7 +80,6 @@ typedef struct
   uint16_t __pad;
 } didaq_reg_pps_counter_t;;
 
-
 typedef struct
 {
   uint32_t last_beam_pattern :9;
@@ -92,7 +90,6 @@ typedef struct
   uint32_t last_coincidence_pattern : 24;
 } didaq_reg_misc0_t;
 
-
 typedef struct
 {
   uint32_t adc_power : 6;
@@ -102,7 +99,7 @@ typedef struct
 {
   uint16_t  ram_addr: 10;
   uint8_t   trig_type;
-}didaq_reg_meta_trig_t;
+} didaq_reg_meta_trig_t;
 
 typedef struct
 {
@@ -113,7 +110,6 @@ typedef struct
 {
   uint16_t start_rd_addr: 10;
 } didaq_reg_rdout_ctl_t;
-
 
 typedef struct
 {
@@ -146,7 +142,6 @@ typedef struct
   uint32_t include_mask: 12;
 } didaq_reg_coin_trig_ctl_t;
 
-
 typedef struct
 {
   uint32_t en_trig         : 1;
@@ -163,9 +158,9 @@ typedef struct
 typedef struct
 {
   uint8_t thresh0;
-  uint8_t __pad0; 
+  uint8_t __pad0;
   uint8_t thresh1;
-  uint8_t __pad1; 
+  uint8_t __pad1;
 } didaq_reg_coin_thresh_t;
 
 typedef struct
@@ -174,12 +169,10 @@ typedef struct
   uint16_t servo;
 } didaq_reg_phas_thresh_t;
 
-
 typedef struct
 {
   uint16_t scalers[2];
 } didaq_reg_scaler_t;
-
 
 typedef struct
 {
@@ -187,8 +180,6 @@ typedef struct
   uint32_t __pad : 8;
   uint32_t latch : 1;
 } didaq_reg_scal_sel_t;
-
-
 
 
 /* Tiny preprocessor detection toolkit to detect special values without enumerating everything. */
@@ -214,7 +205,6 @@ typedef struct
 #define DIDAQ_DOC_NUM_ADDR_PARAM(X) DIDAQ_IIF(DIDAQ_IS_ONE(X))("", "size_t offset, ")
 
 
-
 // generates read functions
 #define DIDAQ_READ_FNS(NAME,ADDR,NADDR,RW,VAR,T) \
   int didaq_read_##NAME(didaq_dev_t * dev, DIDAQ_NUM_ADDR_PARAM(NADDR) DIDAQ_VARREAD_PARAM(VAR) T * val);\
@@ -227,7 +217,6 @@ typedef struct
   "int didaq_read_" #NAME "(didaq_dev_t * dev, " DIDAQ_DOC_NUM_ADDR_PARAM(NADDR) DIDAQ_DOC_VARREAD_PARAM(VAR) " T * val);\n"\
   " /** Schedule a read of the  " #NAME " register. May happen immediately if spidev buffer is full. */"\
   "int didaq_sched_read_" #NAME "(didaq_dev_t * dev, " DIDAQ_DOC_NUM_ADDR_PARAM(NADDR) DIDAQ_DOC_VARREAD_PARAM(VAR) " T * val);\n\n";
-
 
 
 DIDAQ_REGS(DIDAQ_READ_FNS)

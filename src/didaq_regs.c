@@ -318,5 +318,3 @@ int didaq_sysaccess_read(didaq_dev_t * dev, uint32_t addr, uint32_t *da)
 {
   return didaq_sched_sysaccess_read(dev,addr,da) || didaq_complete(dev);
 }
-
-
