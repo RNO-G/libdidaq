@@ -73,6 +73,12 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
+  if (!dev)
+  {
+    close(spi_fd);
+    return NULL;
+  }
+
   dev->spi_fd = spi_fd;
   memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));

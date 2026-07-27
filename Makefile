@@ -1,6 +1,6 @@
 #  Makefile for libdidaq
 CC?=gcc
-CFLAGS?=-Wall -O2 -g
+CFLAGS?=-Wall -O2 -g -fanalyzer
 
 PREFIX?=/usr/local
 LIBDIR?=lib
