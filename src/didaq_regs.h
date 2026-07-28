@@ -82,12 +82,12 @@ typedef struct
 
 typedef struct
 {
-  uint32_t last_beam_pattern :9;
+  uint32_t last_beam_pattern : DIDAQ_NUM_BEAMS;
 } didaq_reg_misc1_t;
 
 typedef struct
 {
-  uint32_t last_coincidence_pattern : 24;
+  uint32_t last_coincidence_pattern : DIDAQ_NUM_CHANNELS;
 } didaq_reg_misc0_t;
 
 typedef struct
