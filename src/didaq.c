@@ -464,9 +464,11 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
                     , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].include_mask
                     , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].include_mask);
 
+#ifdef DIDAQ_ENABLE_TEMPS
   didaq_core_temps_t temps = {0};
   if (didaq_get_core_temps(dev,&temps)) return -1;
   printf( " Temps: [%f %f %f]\n", temps.T[0], temps.T[1], temps.T[2]);
+#endif
   return ret;
 }
 
