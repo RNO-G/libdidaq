@@ -8,9 +8,9 @@
 enum e_didaq_sdm_reg
 {
 
-  DIDAQ_SDM_COMMAND_ADDR           = 0x0 << 2,
-  DIDAQ_SDM_COMMAND_LAST_WORD_ADDR = 0x1 << 2,
-  DIDAQ_SDM_READ_ADDR              = 0x5 << 2,
+  DIDAQ_SDM_COMMAND_ADDR           = DIDAQ_SDM_BASE_ADDR | ( 0x0 << 2),
+  DIDAQ_SDM_COMMAND_LAST_WORD_ADDR = DIDAQ_SDM_BASE_ADDR | ( 0x1 << 2),
+  DIDAQ_SDM_READ_ADDR              = DIDAQ_SDM_BASE_ADDR | ( 0x5 << 2),
 
 };
 
