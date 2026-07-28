@@ -1,6 +1,7 @@
 #include "didaq.h"
 #include "didaq_internal.h"
 #include "didaq_regs.h"
+#include "didaq_sdm.h"
 #include "didaq_helpers.h"
 #include <sys/ioctl.h>
 #include <time.h>
@@ -663,3 +664,30 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 {
   return d->clock_estimate;
 }
+
+int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
+{
+  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR, 
+                          (didaq_sdm_data_t) { .bytes =  { 0x02, 0x00, 0x10, 0x19} });
+  CHECK(ret);
+
+
+  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR, 
+                          (didaq_sdm_data_t) { .bytes =  { 0x00, 0x01, 0x00, 0x3c} });
+  CHECK(ret);
+
+  didaq_sdm_data_t result[5];
+
+  ret = didaq_sdm_read_values(dev, 5, result);
+  CHECK(ret);
+
+  for (int i = 1; i < 4; i++)
+  {
+    uint32_t val = result[i].bytes[3] |  (result[i].bytes[2] << 8) | (result[i].bytes[1] << 16);
+    temps->T[i-1] = val / 256.;
+  }
+  clock_gettime(CLOCK_REALTIME, &temps->when);
+
+  return 0;
+}
+

@@ -178,4 +178,14 @@ int didaq_get_thresholds( didaq_dev_t * dev,
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
 
+typedef struct
+{
+  float T[3];
+  struct timespec when;
+} didaq_core_temps_t;
+
+int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps);
+
+
+
 #endif
