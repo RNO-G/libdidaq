@@ -23,7 +23,7 @@ EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs \
         examples/didaq-equalize-gains
 OBJS = $(SRC:.c=.o)
 INC_PUBLIC=src/didaq.h src/didaq_regs.h src/didaq_adc.h
-LINKLIBS=-ldidaq -lgpios
+LINKLIBS=-ldidaq -lgpios -lm
 
 INC_PRIVATE=src/didaq_internal.h src/didaq_helpers.h
 INCLUDES=$(INC_PUBLIC) $(INC_PRIVATE)

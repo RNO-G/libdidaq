@@ -1,11 +1,13 @@
 #include "didaq.h"
 #include "didaq_internal.h"
 #include "didaq_regs.h"
+#include "didaq_adc.h"
 #include "didaq_helpers.h"
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <errno.h>
 
@@ -584,29 +586,44 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
   return d->clock_estimate;
 }
 
-int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADCS])
+int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADC])
 {
-  for(int adc=0; adc<DIDAQ_NUM_ADCS; adc++)
+  int ret = 0;
+  for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
   {
     if (!(adc_mask & (1<<adc))) continue;
 
-    didaq_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf);
-    didaq_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>8);
+    ret = didaq_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf); CHECK(ret);
+    ret = didaq_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>8); CHECK(ret);
 
   }
+  return 0;
 
 }
 
-uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, float * final_rms)
+static double didaq_getrms(int N, uint8_t* X)
+{
+  double sum = 0;
+  double sum2 = 0;
+  for (int i = 0; i < N ; i++)
+  {
+    sum+=X[i];
+    sum2+=X[i]*X[i];
+  }
+
+  double mean = sum/N;
+  return sqrt(sum2/N - mean*mean);
+}
+
+int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, float * final_rms, uint16_t * gain_codes_out)
 {
   // Sets full-scale range setting on each ADC
   // The gain for each ADC core on the ADCs doesn't seem to appreciably change the RMS
 
   float ch_rms[DIDAQ_NUM_CHANNELS] = {0.};
-  float ch_final_rms[DIDAQ_NUM_CHANNELS] = {0.};
-  float adc_min_rms[DIDAQ_NUM_ADCS] = {100, 100, 100, 100, 100, 100}; //start big
-  float adc_avg_rms[DIDAQ_NUM_ADCS] = {0.};
-  uint16_t gain_codes[DIDAQ_NUM_ADCS] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
+  float adc_min_rms[DIDAQ_NUM_ADC] = {100, 100, 100, 100, 100, 100}; //start big
+  float adc_avg_rms[DIDAQ_NUM_ADC] = {0.};
+  uint16_t gain_codes[DIDAQ_NUM_ADC] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
   uint8_t adc_mask = 0;
   uint8_t adc_done = 0;
   int gain_step = 10; // maybe move as an arg
@@ -629,7 +646,7 @@ uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target
   while(adc_done!=0x3f)
   {
 
-    didaq_set_gain_codes(dev, 0x3f & adc_set_mask, gain_codes);
+    didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes);
     sleep(1); // some time for adcs to settle after changing gain
 
     didaq_force_trigger(dev);
@@ -638,7 +655,7 @@ uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target
     // get min/avg rms values per adc
     for(int ch=0; ch<DIDAQ_NUM_CHANNELS; ch++)
     {
-      ch_rms[ch] = didaq_getrms(rdout->in.LEN, rdout->in.wfs[ch]);
+      ch_rms[ch] = didaq_getrms(rdout.in.len, rdout.wfs[ch]);
 
       adc_avg_rms[ch/4] += ch_rms[ch];
       if(ch_rms[ch] < adc_min_rms[ch/4]) adc_min_rms[ch/4] = ch_rms[ch];
@@ -646,7 +663,7 @@ uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target
     }
 
 
-    for(int adc=0; adc<DIDAQ_NUM_ADCS; adc++)
+    for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {
       adc_avg_rms[adc] = adc_avg_rms[adc]/6;
       if(adc_set_mask & 1 << adc) 
@@ -672,7 +689,7 @@ uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target
         adc_done |= 1<<adc;
       }
 
-      if (adc_done & 1<<adc)
+      if (final_rms && (adc_done & 1<<adc))
       {
         final_rms[adc*4] = ch_rms[adc*4];
         final_rms[adc*4+1] = ch_rms[adc*4+1];
@@ -682,19 +699,9 @@ uint16_t * didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target
     }
   }
 
-  return gain_codes
+  if (gain_codes_out) memcpy(gain_codes_out, gain_codes,sizeof(gain_codes));
+
+  return 0;
 }
 
-static double didaq_getrms(int N, uint8_t* X)
-{
-  double sum = 0;
-  double sum2 = 0;
-  for (int i = 0; i < N ; i++)
-  {
-    sum+=X[i];
-    sum2+=X[i]*X[i];
-  }
 
-  double mean = sum/N;
-  return sqrt(sum2/N - mean*mean);
-}
