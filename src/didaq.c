@@ -2,6 +2,7 @@
 #include "didaq_internal.h"
 #include "didaq_regs.h"
 #include "didaq_adc.h"
+#include "didaq_sdm.h"
 #include "didaq_helpers.h"
 #include <sys/ioctl.h>
 #include <time.h>
@@ -48,7 +49,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
     }
   }
 
-  if ( setup->trig_ready_gpio_label)
+  if (setup->trig_ready_gpio_label)
   {
     int ret = gpios_get_line_by_label(setup->trig_ready_gpio_label, &trig_gpio, ( setup->trig_ready_active_low ? GPIOS_ACTIVE_LOW : 0)  | GPIOS_POLL_RISING | GPIOS_POLL_CLOCK_REALTIME);
     if (ret)
@@ -75,6 +76,12 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
+  if (!dev)
+  {
+    close(spi_fd);
+    return NULL;
+  }
+
   dev->spi_fd = spi_fd;
   memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
@@ -257,7 +264,9 @@ int didaq_event_wait(didaq_dev_t * dev, float timeout)
   while (true)
   {
     didaq_reg_capture_stat_t st = {0};
+    if (dev->setup.poll_mutex) pthread_mutex_lock(dev->setup.poll_mutex);
     int ret = didaq_read_CAPTURE_STAT(dev, &st); CHECK(ret);
+    if (dev->setup.poll_mutex) pthread_mutex_unlock(dev->setup.poll_mutex);
 
     if ( st.event_rdy )
     {
@@ -380,21 +389,21 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 
   for (int i = 0; i < DIDAQ_NUM_CHANNELS; i++)
   {
-    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[(i+1)%2];
-    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[(i+1)%2];
+    scal->coinc_singles_1Hz[i] = raw_scalers[i/2].scalers[(i)%2];
+    scal->coinc_singles_1Hz_gated[i] = raw_scalers[(DIDAQ_NUM_CHANNELS + i)/2].scalers[(i)%2];
   }
 
   for (int i = 0; i < DIDAQ_NUM_COINC; i++)
   {
-    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[1-i];
-    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[1-i];
+    scal->coinc_trig_100mHz[i] = raw_scalers[24].scalers[i];
+    scal->coinc_trig_100mHz_gated[i] = raw_scalers[25].scalers[i];
   }
 
   for (int i = 0; i < DIDAQ_NUM_BEAMS; i++)
   {
-    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i+1) % 2];
-    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i+1) % 2];
-    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i+1) % 2];
+    scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i) % 2];
+    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i) % 2];
+    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i) % 2];
   }
 
   scal->num_pps = raw_scalers[41].scalers[0];
@@ -449,7 +458,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
   ret += fprintf(f, "  capture_stat = { .event_busy = %u, .event_rdy = %u }\n", capture_stat.event_bsy, capture_stat.event_rdy);
   ret += fprintf(f, "  capture_ctl = { .sw_trig = %u, .event_clr = %u, .run_ctr_rst = %u, .pps_en = %u, .ext_en = %u }\n", capture_ctl.sw_trig, capture_ctl.event_clr, capture_ctl.run_ctr_rst, capture_ctl.pps_en, capture_ctl.ext_en);
-  ret += fprintf(f, "  phased_ctl = { .en_trig = %u, .en_trig_to_data = %u, .req_consec_wins = %u, .divide_by_2 = %u, .channel_mask = 0b%b, .beam_mask = 0b%b  }\n" , 
+  ret += fprintf(f, "  phased_ctl = { .en_trig = %u, .en_trig_to_data = %u, .req_consec_wins = %u, .divide_by_2 = %u, .channel_mask = 0b%b, .beam_mask = 0b%b  }\n" ,
                         dev->phased_ctl.en_trig, dev->phased_ctl.en_trig_to_data, dev->phased_ctl.req_consec_wins, dev->phased_ctl.divide_by_2, dev->phased_ctl.channel_mask, dev->phased_ctl.beam_mask);
   ret += fprintf(f, "  coin_ctl[2] = {\n "
                     "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }, \n "
@@ -457,6 +466,11 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
                     , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].include_mask
                     , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].include_mask);
 
+#ifdef DIDAQ_ENABLE_TEMPS
+  didaq_core_temps_t temps = {0};
+  if (didaq_get_core_temps(dev,&temps)) return -1;
+  printf( " Temps: [%f %f %f]\n", temps.T[0], temps.T[1], temps.T[2]);
+#endif
   return ret;
 }
 
@@ -493,6 +507,7 @@ int didaq_dump_event_readout(const didaq_event_readout_t *s, FILE *f)
   ret += fprintf(f, "  CLK_CYCLES:    %u\n", s->meta.clk_cycles);
   ret += fprintf(f, "  PPS_COUNTER:   %hu\n", s->meta.pps_counter);
   ret += fprintf(f, "  LAST_COIN_PAT: %x\n", s->meta.last_coinc_pattern);
+  ret += fprintf(f, "  LAST_BEAM_PAT: %x\n", s->meta.last_beam_pattern);
   ret += fprintf(f, "  TRIG_TYPE:     %hhx\n", s->meta.trig_type);
   ret += fprintf(f, "  START_SAMPLE:  %hu\n", s->in.start);
   ret += fprintf(f, "  NUM_SAMPLES:   %hu\n", s->in.len);
@@ -542,6 +557,73 @@ int didaq_dump_event_readout_csv(const didaq_event_readout_t *s, FILE *f)
 }
 
 
+
+int didaq_get_thresholds( didaq_dev_t * dev,
+                          didaq_phased_thresholds_t * phased,
+                          didaq_coin_thresholds_t * coin,
+                          bool force)
+{
+
+  int ret = 0;
+
+  if (phased)
+  {
+
+    if (force || !dev->cached_phased_init)
+    {
+
+      didaq_reg_phas_thresh_t t[DIDAQ_NUM_BEAMS];
+
+      for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
+      {
+        ret = didaq_sched_read_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 - beam, &t[beam]);
+        CHECK(ret);
+      }
+
+      ret = didaq_complete(dev); CHECK(ret);
+      for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
+      {
+        phased->beam_trig_thresholds[beam] = t[beam].trig;
+        phased->beam_servo_thresholds[beam] = t[beam].servo;
+      }
+    }
+    else
+    {
+      memcpy(phased, &dev->cached_phased_thresholds, sizeof(*phased));
+    }
+  }
+
+  if (coin)
+  {
+
+    if (force || !dev->cached_coin_init)
+    {
+
+      didaq_reg_coin_thresh_t t[DIDAQ_NUM_CHANNELS/2];
+
+      for (int chpair = 0; chpair < countof(t); chpair++)
+      {
+        ret = didaq_sched_read_COIN_THRESH(dev, chpair, &t[chpair]);
+        CHECK(ret);
+      }
+
+      ret = didaq_complete(dev); CHECK(ret);
+
+      for (int ch = 0; ch < DIDAQ_NUM_CHANNELS; ch+=2)
+      {
+        coin->coin_thresholds[ch] = t[ch/2].thresh0;
+        coin->coin_thresholds[ch+1] = t[ch/2].thresh1;
+      }
+    }
+    else
+    {
+      memcpy(coin, &dev->cached_coin_thresholds, sizeof(*coin));
+    }
+  }
+
+  return 0;
+}
+
 int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin)
@@ -553,9 +635,11 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 
   if (phased)
   {
+    memcpy(&dev->cached_phased_thresholds, phased, sizeof(*phased));
+    dev->cached_phased_init = true;
     for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
     {
-      ret = didaq_sched_write_BEAM_THRESH(dev, beam,
+      ret = didaq_sched_write_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 -beam, // seem to be backwards?
           & (didaq_reg_phas_thresh_t) {
            .trig = phased->beam_trig_thresholds[beam],
            .servo = phased->beam_servo_thresholds[beam]
@@ -566,6 +650,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 
   if (coin)
   {
+    memcpy(&dev->cached_coin_thresholds, coin, sizeof(*coin));
+    dev->cached_coin_init = true;
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
        ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
@@ -705,3 +791,28 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
 }
 
 
+int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
+{
+  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR, 
+                          (didaq_sdm_data_t) { .bytes =  { 0x02, 0x00, 0x10, 0x19} });
+  CHECK(ret);
+
+
+  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR, 
+                          (didaq_sdm_data_t) { .bytes =  { 0x00, 0x01, 0x00, 0x3c} });
+  CHECK(ret);
+
+  didaq_sdm_data_t result[5];
+
+  ret = didaq_sdm_read_values(dev, 5, result);
+  CHECK(ret);
+
+  for (int i = 1; i < 4; i++)
+  {
+    uint32_t val = result[i].bytes[3] |  (result[i].bytes[2] << 8) | (result[i].bytes[1] << 16);
+    temps->T[i-1] = val / 256.;
+  }
+  clock_gettime(CLOCK_REALTIME, &temps->when);
+
+  return 0;
+}

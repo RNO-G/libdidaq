@@ -61,6 +61,10 @@ struct didaq_dev
 
   uint32_t clock_estimate;
 
+  bool cached_phased_init;
+  bool cached_coin_init;
+  didaq_phased_thresholds_t cached_phased_thresholds;
+  didaq_phased_thresholds_t cached_coin_thresholds;
 };
 
 

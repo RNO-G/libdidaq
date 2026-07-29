@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
 /** didaq api */
 typedef struct didaq_dev didaq_dev_t;
@@ -35,6 +36,7 @@ typedef struct didaq_setup
   int dbg;
   uint16_t default_len;  //used if didaq_event_readout in.len = 0, if 0, 768 is used.
   uint16_t default_start; //used if didaq_event_readout in.len = 0
+  pthread_mutex_t * poll_mutex; // mutex to hold while polling if using spi
 } didaq_setup_t;
 
 typedef struct didaq_scalers
@@ -166,11 +168,25 @@ int didaq_set_thresholds( didaq_dev_t * dev,
                           const didaq_phased_thresholds_t * phased,
                           const didaq_coin_thresholds_t * coin);
 
+// this may be cached unles force_read = true
+int didaq_get_thresholds( didaq_dev_t * dev,
+                          didaq_phased_thresholds_t * phased,
+                          didaq_coin_thresholds_t * coin, 
+                          bool force_read);
+
+
 
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
 
-int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADC]);
 int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_mask, float target_rms, float * final_rms, uint16_t * gain_codes);
+typedef struct
+{
+  float T[3];
+  struct timespec when;
+} didaq_core_temps_t;
+
+int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps);
+
 
 #endif
