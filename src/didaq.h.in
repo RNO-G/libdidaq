@@ -169,4 +169,8 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
 
+int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADCS]);
+uint16_t * didaq_auto_gain(didaq_dev_t * dev, float target_rms);
+static double didaq_getrms(int N, uint8_t* X);
+
 #endif
