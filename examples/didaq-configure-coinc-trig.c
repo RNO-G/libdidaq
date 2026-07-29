@@ -5,10 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 
-
-// hard code for a 4 channel test using the lab setup with 4 signal chains and pulsers connected to
-// channels 0-3, will add in configuration for upward and downward facing triggers
-
 const char * dev = "/dev/spidev1.0";
 
 
@@ -16,26 +12,29 @@ didaq_trigger_setup_t s = {
   .coinc =
   {
      {
-      .enable = true,
-			.enable_readout = true,
+      .enable = false,
+			.enable_readout = false,
       .num_required = 2,
       .coinc_window = 2,
-			.quad_mode = 1,
+			.quad_mode = 0,
     },
     {
-      .enable = true,
-			.enable_readout = true,
+      .enable = false,
+			.enable_readout = false,
       .num_required = 2,
       .coinc_window = 2,
-			.quad_mode = 1
+			.quad_mode = 0
     }
   }
 };
 
-int channel_thresh[4] = {0,0,0,0};
 
 int main (int nargs, char ** args) 
 {
+  uint32_t quad_mode = 0;
+  uint8_t upper_or_lower = 0;
+  int channel_thresh = 30;
+
 
   for (int i = 1; i < nargs; i++)
   {
@@ -62,13 +61,15 @@ int main (int nargs, char ** args)
       s.coinc[0].channel_exclude_mask = E & (0xfff);
       s.coinc[1].channel_exclude_mask = (E >> 12) & (0xfff);
     }
-    else if (!strcmp(args[i],"-e") && i< nargs-1)
+    else if (!strcmp(args[i],"-q") && i< nargs-1)
     {
-      uint32_t enables = strtoul(args[++i], 0, 0);
-      s.coinc[0].enable = ((enables & 0x1) == 1);
-      s.coinc[1].enable = ((enables & 0x2) == 2);
+      quad_mode = strtoul(args[++i], 0, 0);
+      s.coinc[0].quad_mode = quad_mode;
+      s.coinc[1].quad_mode = quad_mode;
+
     }
-    else if (strcmp(args[i], "-t") == 0) {
+    /*
+        else if (strcmp(args[i], "-t") == 0) {
         // Read following arguments until another flag or end of argv
         while (i + 1 < nargs && args[i + 1][0] != '-') {
             i++; // Move index to the number string
@@ -80,12 +81,27 @@ int main (int nargs, char ** args)
             if (count > 3) break; // Prevent buffer overflow
         }
     }
+    */
+
+    else if(!strcmp(args[i],"-u") && i< nargs-1)
+    {
+      upper_or_lower = strtoul(args[++i], 0, 0);
+    }
     else
     {
-
       fprintf(stderr,"Usage:  didaq-configure-coinc-trig [ -d DEVICE ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [ -M MASK ] [-t channel_thresh ] [-e enables ]\n");
 
       return 0;
+    }
+  }
+
+  for (int trig = 0; trig<2; trig++)
+  {
+    // upper 12 ch = 2, lower 12 ch = 1
+    if (upper_or_lower & (1<<trig) == trig+1)
+    {
+      s.coinc[trig].enable |= (enables & (1<<trig) == trig+1);
+      s.coinc[trig].enable_readout |= (enables & (1<<trig) == trig+1);
     }
   }
 
