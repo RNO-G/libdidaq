@@ -14,7 +14,7 @@ enum e_didaq_sdm_reg
 
 };
 
-typedef union
+typedef union didaq_sdm_data
 {
   uint8_t bytes[4];
   uint32_t word;
