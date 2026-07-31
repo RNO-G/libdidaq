@@ -315,10 +315,8 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   ret = didaq_sched_read_LAST_MISC1(dev, &misc1); CHECK(ret);
   ret = didaq_sched_read_LAST_TRIG(dev, &meta_trig); CHECK(ret);
 
-
-  rdout->meta.pps_counter = pps_counter.pps;
-  rdout->meta.last_coinc_pattern = misc0.last_coincidence_pattern;
-  rdout->meta.last_beam_pattern = misc1.last_beam_pattern;
+  // NB: the reads above are only scheduled. pps_counter/misc0/misc1/meta_trig stay
+  // untouched until didaq_complete() below, so they are copied out after that.
 
   didaq_reg_rdout_ctl_t rdout_ctl = {.start_rd_addr = rdout->in.start / 4};
 
@@ -349,8 +347,29 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
 
   ret = didaq_complete(dev); CHECK(ret);
   clock_gettime(CLOCK_REALTIME, &rdout->meta.readout_time);
+
+  rdout->meta.pps_counter = pps_counter.pps;
+  rdout->meta.last_coinc_pattern = misc0.last_coincidence_pattern;
+  rdout->meta.last_beam_pattern = misc1.last_beam_pattern;
   rdout->meta.trig_type = meta_trig.trig_type;
-  dev->event_ready =0;
+
+  if (dev->dbg)
+  {
+    // raw is the full 32 bits as received (post byte-swap); decoded is after bitfield
+    // extraction. raw == 0 points at the FPGA, raw != 0 with decoded == 0 points here.
+    uint32_t raw_pps, raw_misc0, raw_misc1, raw_trig;
+    memcpy(&raw_pps, &pps_counter, sizeof(raw_pps));
+    memcpy(&raw_misc0, &misc0, sizeof(raw_misc0));
+    memcpy(&raw_misc1, &misc1, sizeof(raw_misc1));
+    memcpy(&raw_trig, &meta_trig, sizeof(raw_trig));
+    fprintf(dev->ferr, " ( META raw: PPS[0x56]=0x%08x MISC0[0x57]=0x%08x MISC1[0x58]=0x%08x TRIG[0x59]=0x%08x )\n",
+            raw_pps, raw_misc0, raw_misc1, raw_trig);
+    fprintf(dev->ferr, " ( META decoded: pps=%u coin_pat=0x%08x beam_pat=0x%04x trig_type=0x%02x ram_addr=%u )\n",
+            rdout->meta.pps_counter, rdout->meta.last_coinc_pattern,
+            rdout->meta.last_beam_pattern, rdout->meta.trig_type, meta_trig.ram_addr);
+  }
+
+  dev->event_ready = 0;
 
   return 0;
 }
