@@ -340,7 +340,7 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   //clear the event
   didaq_reg_capture_ctl_t strobe ;
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
-  strobe.event_clr =1;
+  strobe.event_clr = 1;
 
   ret = didaq_sched_write_CAPTURE_CTL(dev, &strobe); CHECK(ret);
   ret = didaq_sched_write_CAPTURE_CTL(dev, &dev->capture_ctl); CHECK(ret);
