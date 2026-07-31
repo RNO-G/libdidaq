@@ -207,7 +207,7 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
     dev->coin_ctl[i].num_coinc = trig->coinc[i].num_required;
     dev->coin_ctl[i].coin_win = trig->coinc[i].coinc_window;
     dev->coin_ctl[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xfff;
-    ret = didaq_write_COIN_CTL(dev,i,&dev->coin_ctl[i]); CHECK(ret);
+    ret = didaq_write_COIN_CTL(dev, i, &dev->coin_ctl[i]); CHECK(ret);
   }
 
   return ret;
@@ -652,7 +652,7 @@ int didaq_set_thresholds( didaq_dev_t * dev,
     dev->cached_coin_init = true;
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
-       ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
+       ret = didaq_sched_write_COIN_THRESH(dev, chan / 2,
           & ( didaq_reg_coin_thresh_t) {
             .thresh0 = coin->coin_thresholds[chan],
             .thresh1 = coin->coin_thresholds[chan+1]
@@ -672,12 +672,12 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 
 int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
 {
-  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR, 
+  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR,
                           (didaq_sdm_data_t) { .bytes =  { 0x02, 0x00, 0x10, 0x19} });
   CHECK(ret);
 
 
-  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR, 
+  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR,
                           (didaq_sdm_data_t) { .bytes =  { 0x00, 0x01, 0x00, 0x3c} });
   CHECK(ret);
 
@@ -695,4 +695,3 @@ int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
 
   return 0;
 }
-
