@@ -198,11 +198,11 @@ int didaq_complete(didaq_dev_t * dev)
 
       if (dev->dbg)
       {
-        fprintf(dev->ferr, " ( RX [xfer%d]:\n", ixfer);
+        fprintf(dev->ferr, " ( RX [xfer%d]: ", ixfer);
         char * buf = (char*) dev->xfers[ixfer].rx_buf;
         for (int ib = 0; ib < dev->xfers[ixfer].len; ib++)
         {
-          fprintf(dev->ferr,"%s0x%02hhx", ib == 0 ? "," : "", buf[ib]);
+          fprintf(dev->ferr,"%s0x%02hhx", ib == 0 ? "," : " ", buf[ib]);
         }
         fprintf(dev->ferr, " )\n");
       }
