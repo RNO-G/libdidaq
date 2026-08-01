@@ -117,7 +117,7 @@ static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8
 static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc);
 static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, int num_bytes_per_trx);
 int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes);
-static int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data);
+int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data);
 
 
 int didaq_adc_sched_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t value);
