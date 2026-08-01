@@ -93,7 +93,7 @@ enum e_didaq_adc_reg
   DIDAQ_ADC_REG_GAIN5         =   0x367
 };
 
-// there are not bit shifted to convert byte addr to word addr, let the interface wr/rd methods do this since we could
+// these are not bit shifted to convert byte addr to word addr, let the interface wr/rd methods do this since we could
 // write to any of the Avalon regs
 enum e_didaq_spi_core_addr  {
   DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | 0x00,
@@ -105,6 +105,19 @@ enum e_didaq_spi_core_addr  {
   DIDAQ_SPI_ADR_RX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | 0x0A,
   DIDAQ_SPI_ADR_RX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | 0x0B
 };
+
+static int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words);
+static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words);
+int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting);
+static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd);
+static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev);
+static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes);
+static int didaq_uart_adc_read_until_not_f(didaq_dev_t * dev);
+static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8_t num_bytes);
+static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc);
+static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, int num_bytes_per_trx);
+int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes);
+static int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data);
 
 
 int didaq_adc_sched_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t value);
