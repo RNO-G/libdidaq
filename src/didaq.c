@@ -158,6 +158,8 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   uint16_t zeros[2] = {0};
   write(uart_fd, &zeros, sizeof(zeros));
 
+  // setup adc spi interface
+  didaq_uart_adc_set_spi_cfg(dev, 4);
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
