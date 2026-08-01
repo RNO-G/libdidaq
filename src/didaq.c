@@ -15,7 +15,7 @@
 
 didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 {
-  if (!setup || !setup->spi_device || !*setup->spi_device) return NULL;
+  if (!setup || !setup->spi_device || !*setup->spi_device || !setup->uart_device || !*setup->uart_device) return NULL;
   didaq_dev_t * dev = 0;
 
   FILE * ferr = setup->err_out ?: stderr;
@@ -72,15 +72,106 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bpw);
 
 
-  //allocate memory for dev
-  dev = calloc(sizeof(didaq_dev_t),1);
-  if (!dev)
+  uart_fd = open(uart_device, O_RDWR);
+
+  if (uart_fd < 0)
   {
+    fprintf(stderr,"Could not open %s\n", setup->uart_device);
+    close(uart_fd);
+    close(spi_fd);
+    return 0;
+  }
+
+  //advisory locks
+  int locked_uart = flock(uart_fd, LOCK_EX | LOCK_NB);
+  if (locked_uart < 0)
+  {
+    fprintf(ferr,"Could not get exclusive access to %s\n", setup->uart_device);
+    close(uart_fd);
     close(spi_fd);
     return NULL;
   }
 
+  struct termios tty;
+
+  tcgetattr(uart_fd,  &tty);
+
+  //clear parity bit
+  tty.c_cflag &= ~PARENB;
+
+  //one stop bit
+  tty.c_cflag &= ~CSTOPB;
+
+  //8 bits
+  tty.c_cflag &= ~CSIZE;
+  tty.c_cflag |= CS8;
+
+  //no hw flow control
+  tty.c_cflag &=~CRTSCTS;
+
+  //turn on read/disable ctrl lines
+  tty.c_cflag |= CREAD | CLOCAL;
+
+  //turn OFF canoncial mode
+  tty.c_lflag &= ~ICANON;
+
+  //disable echo bits (probably already disabled?)
+  tty.c_lflag &= ~ECHO;
+  tty.c_lflag &= ~ECHOE;
+  tty.c_lflag &= ~ECHONL;
+
+  //disable interpretation of signal chars
+  tty.c_lflag &= ~ISIG;
+
+  //disable software flow control
+  tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+  //disable special handling of input  bytes
+  tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|INLCR|ICRNL);
+
+  //disable any special output modes
+  tty.c_oflag &= ~OPOST;
+  tty.c_oflag &= ~ONLCR;
+
+
+  //make it nonblocking
+  tty.c_cc[VTIME]=0;
+  tty.c_cc[VMIN]=0;
+
+  //baud rate
+  cfsetispeed(&tty, B115200);
+  cfsetospeed(&tty, B115200);
+
+  //set the serial attrs
+  if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
+  {
+    fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", uart_device, errno, strerror(errno));
+    close(uart_fd);
+    close(spi_fd);
+    return 0;
+  }
+
+  //drain the port
+  tcflush(uart_fd, TCIOFLUSH);
+
+  //Write a few 0s to make sure we're synchronized
+  uint16_t zeros[2] = {0};
+  write(uart_fd, &zeros, sizeof(zeros));
+
+
+  //allocate memory for dev
+  dev = calloc(sizeof(didaq_dev_t),1);
+
+  if (!dev)
+  {
+    close(spi_fd);
+    close(uart_fd);
+    return NULL;
+  }
+
+  dev->uart = uart_fd;
   dev->spi_fd = spi_fd;
+
   memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
   memcpy(&dev->trig_rdy,  &trig_gpio, sizeof(trig_gpio));
@@ -152,6 +243,11 @@ int didaq_close (didaq_dev_t * dev)
   {
     flock(dev->spi_fd, LOCK_UN);
     close(dev->spi_fd);
+  }
+  if (dev->uart_fd)
+  {
+    flock(dev->uart_fd, LOCK_UN);
+    close(dev->uart_fd);
   }
 
   free(dev);
