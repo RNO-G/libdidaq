@@ -177,7 +177,7 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
 }
 
 //TODO
-static int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data)
+int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data)
 {
   // set adc num
   int ret = didaq_uart_adc_select(dev, iadc);
