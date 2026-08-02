@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <termios.h>
 
 #include <errno.h>
 
@@ -72,7 +73,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bpw);
 
 
-  uart_fd = open(uart_device, O_RDWR);
+  int uart_fd = open(uart_device, O_RDWR);
 
   if (uart_fd < 0)
   {
@@ -171,7 +172,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
     return NULL;
   }
 
-  dev->uart = uart_fd;
+  dev->uart_fd = uart_fd;
   dev->spi_fd = spi_fd;
 
   memcpy(&dev->setup, setup, sizeof(dev->setup));
