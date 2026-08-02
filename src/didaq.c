@@ -147,7 +147,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   //set the serial attrs
   if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
   {
-    fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", uart_device, errno, strerror(errno));
+    fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", dev->uart_device, errno, strerror(errno));
     close(uart_fd);
     close(spi_fd);
     return 0;
