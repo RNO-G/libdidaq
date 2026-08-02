@@ -158,7 +158,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //Write a few 0s to make sure we're synchronized
   uint16_t zeros[2] = {0};
-  write(uart_fd, &zeros, sizeof(zeros));
+  write(dev->uart_fd, &zeros, sizeof(zeros));
 
   // setup adc spi interface
   didaq_uart_adc_set_spi_cfg(dev, 4);
