@@ -18,7 +18,7 @@ static int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   // read from fpga reg
   // num bytes can be default 4, but letting it be flexible
   dev->uart_tx_buf[0] = READ_BYTE;
-  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24
+  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24;
   dev->uart_tx_buf[2] = (addr & 0xff0000) << 16;
   dev->uart_tx_buf[3] = (addr & 0xff00) << 10; // + 2 for byte to word addr
   dev->uart_tx_buf[4] = (addr & 0xff) << 2; // 2 for byte to word addr
@@ -36,7 +36,7 @@ static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uin
 {
   // write to fpga reg
   dev->uart_tx_buf[0] = WRITE_BYTE;
-  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24
+  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24;
   dev->uart_tx_buf[2] = (addr & 0xff0000) << 16;
   dev->uart_tx_buf[3] = (addr & 0xff00) << 10; // + 2 for byte to word addr
   dev->uart_tx_buf[4] = (addr & 0xff) << 2; // 2 for byte to word addr
@@ -59,7 +59,7 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
   if(ret != BYTES_PER_WORD) return 1;
 
   // TODO check order
-  int message = dev->uart_rx_buf[3]<<24 + dev->uart_rx_buf[2]<<16 + dev->uart_rx_buf[1]<<8 + ((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[0];
+  int message = (dev->uart_rx_buf[3]<<24) + (dev->uart_rx_buf[2]<<16) + (dev->uart_rx_buf[1]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[0]);
   didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1);
   didaq_uart_adc_fifo_reset(dev, 1, 1);
 
@@ -73,7 +73,7 @@ static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
   if (wr) message |= 0x1;
   if (rd) message |= 0x2;
 
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADC_CTRL, message, 1); CHECK(ret);
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_CTRL, message, 1); CHECK(ret);
 
   return 0;
 }
@@ -84,8 +84,8 @@ static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev)
   // check how many bytes are in the fpga rx fifo
   // to be used to shuffle through the fifo to find real data
   int buffer_level = 0;
-  int num_bytes = didaq_adc_read(DIDAQ_SPI_ADR_RX_NUM, 1);
-  if(num_bytes != WORDS_PER_BYTE) return 0; 
+  int num_bytes = didaq_uart_read(DIDAQ_SPI_ADR_RX_NUM, 1);
+  if(num_bytes != BYTES_PER_WORD) return 0; 
   
   buffer_level = dev->uart_rx_buf[3] + dev->uart_rx_buf[2]<<8; //maybe 0 and 1?, might be 2 and 3?
   return buffer_level;
@@ -125,7 +125,7 @@ static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8
   int ret;
   for(int i = 0; i<num_bytes; i++)
   {
-    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> 8*i) &0xff); CHECK(ret);
+    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> 8*i) &0xff, 1); CHECK(ret);
   }
   return 0;
 }
@@ -146,7 +146,7 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, int num_bytes_per_trx)
 {
   // tell fpga to do the spi transer with the adc
-  int packet = (0xff&num_bytes_per_trx) << 16 + 1;
+  int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
   int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); CHECK(ret);
   return 0;
 }
@@ -182,15 +182,17 @@ int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint
   // set adc num
   int ret = didaq_uart_adc_select(dev, iadc);
 
-  didaq_uart_adc_fifo_reset(dev, 1, 1);
+  ret += didaq_uart_adc_fifo_reset(dev, 1, 1);
 
-  [0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
+  //[0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
   int packet = (0x7f & ((0x3f00>>8) & reg))<<16 + reg&0xff << 8 + data & 0xff; // omg this byte ordering is all over the place
-  didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
+  ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
 
   // initiate spi trx
-  didaq_uart_adc_do_spi_trx(dev, 3);
-
+  ret += didaq_uart_adc_do_spi_trx(dev, 3);
+  
+  // check returns to make sure consistant with error codes, or if num bytes
+  CHECL(ret);
   return 0;
 }
 
