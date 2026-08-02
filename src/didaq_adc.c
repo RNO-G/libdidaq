@@ -53,6 +53,18 @@ static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uin
   return 0;
 }
 
+static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
+{
+  // flush the fpga tx and rx fifo buffers, should be called before reg read or write
+  uint32_t message = 0;
+  if (wr) message |= 0x1;
+  if (rd) message |= 0x2;
+
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_CTRL, message, 1); CHECK(ret);
+
+  return 0;
+}
+
 int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 {
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1);
@@ -62,18 +74,6 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
   int message = (dev->uart_rx_buf[3]<<24) + (dev->uart_rx_buf[2]<<16) + (dev->uart_rx_buf[1]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[0]);
   didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1);
   didaq_uart_adc_fifo_reset(dev, true, true);
-
-  return 0;
-}
-
-static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
-{
-  // flush the fpga tx and rx fifo buffers, should be called before reg read or write
-  uint32_t message = 0;
-  if (wr) message |= 0x1;
-  if (rd) message |= 0x2;
-
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_CTRL, message, 1); CHECK(ret);
 
   return 0;
 }
