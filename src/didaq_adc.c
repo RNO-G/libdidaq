@@ -159,7 +159,7 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
   int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
   
   // reset fifo
-  ret += didaq_uart_adc_fifo_reset(dev, 1, 1); CHECK(ret);
+  ret += didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
   
   // fill tx buffer
   int packet = ((0x80 | ((0x3f>>8) & reg))<<16) + (reg & 0xff << 8); // omg this byte ordering is all over the place
@@ -182,10 +182,10 @@ int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint
   // set adc num
   int ret = didaq_uart_adc_select(dev, iadc);
 
-  ret += didaq_uart_adc_fifo_reset(dev, 1, 1);
+  ret += didaq_uart_adc_fifo_reset(dev, true, true);
 
   //[0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
-  int packet = ((0x7f & ((0x3f00>>8) & reg))<<16) + (reg & 0xff << 8) + data & 0xff; // omg this byte ordering is all over the place
+  int packet = ((0x7f & ((0x3f00>>8) & reg))<<16) + (reg & 0xff << 8) + (data & 0xff); // omg this byte ordering is all over the place
   ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
 
   // initiate spi trx
