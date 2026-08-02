@@ -74,7 +74,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bpw);
 
 
-  int uart_fd = open(uart_device, O_RDWR);
+  int uart_fd = open(setup->uart_device, O_RDWR);
 
   if (uart_fd < 0)
   {
@@ -158,10 +158,9 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //Write a few 0s to make sure we're synchronized
   uint16_t zeros[2] = {0};
-  write(dev->uart_fd, &zeros, sizeof(zeros));
+  write(uart_fd, &zeros, sizeof(zeros));
 
-  // setup adc spi interface
-  didaq_uart_adc_set_spi_cfg(dev, 4);
+
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
@@ -175,6 +174,9 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   dev->uart_fd = uart_fd;
   dev->spi_fd = spi_fd;
+
+  // setup adc spi interface
+  didaq_uart_adc_set_spi_cfg(dev, 4);
 
   memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
