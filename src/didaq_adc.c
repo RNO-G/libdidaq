@@ -16,12 +16,12 @@
 static int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
   // read from fpga reg
-  // num bytes can be default 4, but letting it be flexible
+  // num bytes (words) usally just 4 (1), but letting it be flexible
   dev->uart_tx_buf[0] = READ_BYTE;
-  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24;
-  dev->uart_tx_buf[2] = (addr & 0xff0000) << 16;
-  dev->uart_tx_buf[3] = (addr & 0xff00) << 10; // + 2 for byte to word addr
-  dev->uart_tx_buf[4] = (addr & 0xff) << 2; // 2 for byte to word addr
+  dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
+  dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offser
+  dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
+  dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
   dev->uart_tx_buf[5] = num_words;
 
   int ret = write(dev->uart_fd, dev->uart_tx_buf, 6); CHECK(ret); // read req
@@ -36,16 +36,17 @@ static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uin
 {
   // write to fpga reg
   dev->uart_tx_buf[0] = WRITE_BYTE;
-  dev->uart_tx_buf[1] = (addr & 0xff000000) << 24;
-  dev->uart_tx_buf[2] = (addr & 0xff0000) << 16;
-  dev->uart_tx_buf[3] = (addr & 0xff00) << 10; // + 2 for byte to word addr
-  dev->uart_tx_buf[4] = (addr & 0xff) << 2; // 2 for byte to word addr
+  dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
+  dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offset
+  dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
+  dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
   dev->uart_tx_buf[5] = num_words; // usually 1
 
   for (int i = 0; i< num_words*BYTES_PER_WORD; i++)
   {
     // this should also take care of big/little endian ordering
-    dev->uart_tx_buf[i+5] = (data >> 8*(num_words*BYTES_PER_WORD-i-1)) & 0xff;
+    // e.g. fifo reset writes 0x3. these should be sent last to be cons. with pydidaq
+    dev->uart_tx_buf[i+5] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
   }
 
   int ret = write(dev->uart_fd, dev->uart_tx_buf, 6+num_words*BYTES_PER_WORD); CHECK(ret);
