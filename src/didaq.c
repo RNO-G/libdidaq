@@ -142,7 +142,6 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //baud rate
   cfsetispeed(&tty, B115200);
-  cfsetospeed(&tty, B115200);
 
   //set the serial attrs
   if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
@@ -155,12 +154,6 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   //drain the port
   tcflush(uart_fd, TCIOFLUSH);
-
-  //Write a few 0s to make sure we're synchronized
-  uint16_t zeros[2] = {0};
-  write(uart_fd, &zeros, sizeof(zeros));
-
-
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
@@ -798,3 +791,9 @@ int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
   return 0;
 }
 
+uint32_t didaq_dump_uart_rx_buf(didaq_dev_t * d, uint16_t how_many)
+{
+  printf("dumping rx buf");
+  for(int i = 0; i<how_many; i++)
+
+}

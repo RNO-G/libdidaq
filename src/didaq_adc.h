@@ -93,7 +93,8 @@ enum e_didaq_adc_reg
   DIDAQ_ADC_REG_GAIN5         =   0x367
 };
 
-// these are not bit shifted to convert byte addr to word addr, let the interface wr/rd methods do this since we could
+// these are not bit shifted to convert word addr to byte addr,
+// let the interface wr/rd methods do this since we could
 // write to any of the Avalon regs
 enum e_didaq_spi_core_addr  {
   DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | 0x00,
