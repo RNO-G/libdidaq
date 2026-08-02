@@ -29,7 +29,7 @@ int main (int nargs, char ** args)
   didaq_adc_reg_read(dev, iadc, reg_addr, trx_bytes);
 
   printf("ind 0: %d, 1: %d, 2: %d, 3: %d\n", dev->uart_rx_buf[0],dev->uart_rx_buf[1],dev->uart_rx_buf[2],dev->uart_rx_buf[3]);
-  printf("hopefully find should find 42 somewhere\n");
+  printf("hopefully find should find 81 somewhere\n");
 
   return didaq_close(dev);
 
