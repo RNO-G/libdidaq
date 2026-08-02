@@ -3,6 +3,7 @@
 #include "didaq_regs.h"
 #include "didaq_sdm.h"
 #include "didaq_helpers.h"
+#include "didaq_adc.h"
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
