@@ -790,10 +790,3 @@ int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
 
   return 0;
 }
-
-uint32_t didaq_dump_uart_rx_buf(didaq_dev_t * d, uint16_t how_many)
-{
-  printf("dumping rx buf");
-  for(int i = 0; i<how_many; i++)
-
-}
