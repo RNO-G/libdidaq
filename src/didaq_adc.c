@@ -45,7 +45,7 @@ static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uin
   for (int i = 0; i< num_words*BYTES_PER_WORD; i++)
   {
     // this should also take care of big/little endian ordering
-    // e.g. fifo reset writes 0x3. these should be sent last to be cons. with pydidaq
+    // e.g. fifo reset writes 0x3. these non-zero bits should be sent last to be cons. with pydidaq
     dev->uart_tx_buf[i+5] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
   }
 
@@ -126,7 +126,7 @@ static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8
   int ret;
   for(int i = 0; i<num_bytes; i++)
   {
-    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> 8*i) &0xff, 1); CHECK(ret);
+    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> (8*(num_bytes-i-1))) &0xff, 1); CHECK(ret);
   }
   return 0;
 }
@@ -136,7 +136,7 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 {
   // tell the fpga which adc we want to communicate with.
   // call before do rx or tx. accesses user reg space
-  uint32_t spi_sel_reg_addr = 0x01080000 | 0x0D<<2;
+  uint32_t spi_sel_reg_addr = 0x01080000 + 0x0D;
 
   int ret = didaq_uart_write(dev, spi_sel_reg_addr, adc&0x7, 1); CHECK(ret);
 
@@ -144,7 +144,7 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 }
 
 // TODO, rewrite for uart write/read
-static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, int num_bytes_per_trx)
+static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_trx)
 {
   // tell fpga to do the spi transer with the adc
   int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
@@ -163,7 +163,7 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
   ret += didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
   
   // fill tx buffer
-  int packet = ((0x80 | ((0x3f>>8) & reg))<<16) + (reg & 0xff << 8); // omg this byte ordering is all over the place
+  int packet = ((0x80 | ((0x3f&reg) >> 8))<<16) + ((reg & 0xff) << 8); // omg this byte ordering is all over the place
   ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3); CHECK(ret);
 
   // initiate spi trx to adc
@@ -186,7 +186,7 @@ int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint
   ret += didaq_uart_adc_fifo_reset(dev, true, true);
 
   //[0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
-  int packet = ((0x7f & ((0x3f00>>8) & reg))<<16) + (reg & 0xff << 8) + (data & 0xff); // omg this byte ordering is all over the place
+  int packet = ((0x7f & ((0x3f00&reg) >> 8))<<16) + ((reg & 0xff) << 8) + (data & 0xff); // omg this byte ordering is all over the place
   ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
 
   // initiate spi trx
