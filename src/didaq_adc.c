@@ -61,7 +61,7 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
   // TODO check order
   int message = (dev->uart_rx_buf[3]<<24) + (dev->uart_rx_buf[2]<<16) + (dev->uart_rx_buf[1]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[0]);
   didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1);
-  didaq_uart_adc_fifo_reset(dev, 1, 1);
+  didaq_uart_adc_fifo_reset(dev, true, true);
 
   return 0;
 }
@@ -84,10 +84,10 @@ static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev)
   // check how many bytes are in the fpga rx fifo
   // to be used to shuffle through the fifo to find real data
   int buffer_level = 0;
-  int num_bytes = didaq_uart_read(DIDAQ_SPI_ADR_RX_NUM, 1);
+  int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1);
   if(num_bytes != BYTES_PER_WORD) return 0; 
   
-  buffer_level = dev->uart_rx_buf[3] + dev->uart_rx_buf[2]<<8; //maybe 0 and 1?, might be 2 and 3?
+  buffer_level = dev->uart_rx_buf[3] + (dev->uart_rx_buf[2]<<8); //maybe 0 and 1?, might be 2 and 3?
   return buffer_level;
 }
 
@@ -162,7 +162,7 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
   ret += didaq_uart_adc_fifo_reset(dev, 1, 1); CHECK(ret);
   
   // fill tx buffer
-  int packet = (0x80 | ((0x3f>>8) & reg))<<16 + reg&0xff << 8; // omg this byte ordering is all over the place
+  int packet = ((0x80 | ((0x3f>>8) & reg))<<16) + (reg & 0xff << 8); // omg this byte ordering is all over the place
   ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3); CHECK(ret);
 
   // initiate spi trx to adc
@@ -185,14 +185,14 @@ int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint
   ret += didaq_uart_adc_fifo_reset(dev, 1, 1);
 
   //[0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
-  int packet = (0x7f & ((0x3f00>>8) & reg))<<16 + reg&0xff << 8 + data & 0xff; // omg this byte ordering is all over the place
+  int packet = ((0x7f & ((0x3f00>>8) & reg))<<16) + (reg & 0xff << 8) + data & 0xff; // omg this byte ordering is all over the place
   ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
 
   // initiate spi trx
   ret += didaq_uart_adc_do_spi_trx(dev, 3);
   
   // check returns to make sure consistant with error codes, or if num bytes
-  CHECL(ret);
+  CHECK(ret);
   return 0;
 }
 
