@@ -13,7 +13,7 @@
 // these are the same as pydidaq, just ported to c
 
 
-static int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
+int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
@@ -32,7 +32,7 @@ static int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   return 0;
 }
 
-static int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
+int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
   // write to fpga reg
   dev->uart_tx_buf[0] = WRITE_BYTE;
