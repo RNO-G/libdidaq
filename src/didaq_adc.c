@@ -181,8 +181,7 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_trx)
 {
   // wait for previous transaction to finish
-  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
-  if((dev->uart_rx_buf[3]&0x1) == 0x1) printf("previous adc trx still running, do something\n");
+  //int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
   //while((dev->uart_rx_buf[3]&0x1) == 0x1)
   //{
   //  // wait for status bit
@@ -198,8 +197,8 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
   uint8_t done = 0;
   while(done==0)
   {
-    didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); 
-    done = dev->uart_rx_buf[3] & 0xff;
+    didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); 
+    done = dev->uart_rx_buf[3] & 0x01;
     usleep(1000);
   }
   CHECK(ret);
