@@ -12,7 +12,6 @@
 #define CHECK(RET)  if (RET) return RET;
 
 // these are the same as pydidaq, just ported to c
-// TODO for all, revise return type checking!
 
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
@@ -84,7 +83,6 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 {
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1); CHECK(ret);
 
-  // TODO check order
   int message = (dev->uart_rx_buf[0]<<24) + (dev->uart_rx_buf[1]<<16) + (dev->uart_rx_buf[2]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[3]);
   ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1); CHECK(ret);
   ret = didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
@@ -92,7 +90,6 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
   return 0;
 }
 
-//TODO, rewrite for uart write/read
 static int didaq_uart_adc_spi_rx_fifo_level(didaq_dev_t * dev)
 {
   // check how many bytes are in the fpga rx fifo
@@ -117,7 +114,6 @@ static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
   return buffer_level;
 }
 
-// TODO, rewrite for uart write/read
 static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes)
 {
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_DATA, 1);
@@ -125,7 +121,6 @@ static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes
   return data;
 }
 
-//TODO, fill using uart write/read
 static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
 {
   // loop through fpga fifo and return the real data (first byte that is not 0xff)
@@ -144,7 +139,6 @@ static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
   return data;
 }
 
-// TODO, rewrite for uart write/read
 static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8_t num_bytes)
 {
   // fill fpga's tx buffer
@@ -156,7 +150,6 @@ static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8
   return 0;
 }
 
-//TODO, rewrite for uart write/read
 static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 {
   // tell the fpga which adc we want to communicate with.
@@ -168,7 +161,6 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
   return 0;
 }
 
-// TODO, rewrite for uart write/read
 static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_trx)
 {
 
@@ -180,8 +172,6 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
   return 0;
 }
 
-
-// TODO
 int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes)
 {
   // set adc num, can probably optimize by tracking current adc in reg
@@ -205,7 +195,6 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
   return val;
 }
 
-//TODO
 int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data)
 {
   // set adc num
