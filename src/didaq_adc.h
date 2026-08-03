@@ -11,6 +11,7 @@
 
 #define DIDAQ_SPI_HOST_ADDRESS 0x01020000
 
+// ADC register map
 enum e_didaq_adc_reg
 {
   DIDAQ_ADC_REG_CONFIG_A      =   0x000,
@@ -93,9 +94,7 @@ enum e_didaq_adc_reg
   DIDAQ_ADC_REG_GAIN5         =   0x367
 };
 
-// these are not bit shifted to convert word addr to byte addr,
-// let the interface wr/rd methods do this since we could
-// write to any of the Avalon regs
+// Word addresses for SPI host registers.
 enum e_didaq_spi_core_addr  {
   DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | 0x00,
   DIDAQ_SPI_ADR_SETNGS_0 = DIDAQ_SPI_HOST_ADDRESS  | 0x03,

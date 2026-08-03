@@ -85,7 +85,7 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 }
 
 //TODO, rewrite for uart write/read
-static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev)
+static int didaq_uart_adc_spi_rx_fifo_level(didaq_dev_t * dev)
 {
   // check how many bytes are in the fpga rx fifo
   // to be used to shuffle through the fifo to find real data
@@ -93,10 +93,21 @@ static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev)
   int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1);
   // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
   
-  buffer_level = dev->uart_rx_buf[3] + (dev->uart_rx_buf[2]<<8);
+  buffer_level = dev->uart_rx_buf[3];
   return buffer_level;
 }
 
+static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
+{
+  // check how many bytes are in the fpga rx fifo
+  // to be used to shuffle through the fifo to find real data
+  int buffer_level = 0;
+  int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1);
+  // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
+  
+  buffer_level = dev->uart_rx_buf[3];
+  return buffer_level;
+}
 // TODO, rewrite for uart write/read
 static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes)
 {
@@ -111,7 +122,7 @@ static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
   // loop through fpga fifo and return the real data (first byte that is not 0xff)
   //int ret = didaq_uart_adc_read(dev)
 
-  int fifo_level = didaq_uart_adc_spi_fifo_level(dev);
+  int fifo_level = didaq_uart_adc_spi_rx_fifo_level(dev);
   int data = 0;
   for(int i = 0; i<fifo_level; i++)
   {
