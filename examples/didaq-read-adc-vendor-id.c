@@ -1,5 +1,6 @@
 #include "didaq.h"
 #include "didaq_adc.h"
+#include "didaq_internal.h"
 
 #include <stdlib.h>
 #include <stdint.h>
