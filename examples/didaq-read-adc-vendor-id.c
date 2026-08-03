@@ -1,4 +1,6 @@
 #include "didaq.h"
+#include "didaq_adc.h"
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -26,6 +28,8 @@ int main (int nargs, char ** args)
   uint8_t iadc = 0; // choose adc 0
   uint16_t reg_addr = 0x0C; // id at reg 0xC
   uint8_t trx_bytes = 3; // 3 for a read
+  didaq_uart_read(dev,0x0102000,1);
+  printf("0: %d, 1: %d, 2: %d, 3: %d", dev->uart_rx_buf[0], dev->uart_rx_buf[1],dev->uart_rx_buf[2], dev->uart_rx_buf[3]);
   didaq_adc_reg_read(dev, iadc, reg_addr, trx_bytes);
 
   printf("ind 0: %d, 1: %d, 2: %d, 3: %d\n", dev->uart_rx_buf[0],dev->uart_rx_buf[1],dev->uart_rx_buf[2],dev->uart_rx_buf[3]);
