@@ -15,6 +15,8 @@
 
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
+  usleep(5000);
+
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
   // high byte fills rx buf [0], low byte fulls rx buf[3]
@@ -29,7 +31,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6); // read req
   if(sent_bytes != 6) return -sent_bytes;
 
-  usleep(2000); // tune val or figure out num checking
+  usleep(5000);
 
   int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
   if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
@@ -39,6 +41,8 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
+  usleep(5000); // tune val... basically the fpga is much slower than the sbc
+
   // write to fpga reg
   dev->uart_tx_buf[0] = WRITE_BYTE;
   dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
@@ -164,7 +168,10 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
 {
   // tell fpga to do the spi transer with the adc
   int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); CHECK(ret);
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); 
+  
+  usleep(5000);
+  CHECK(ret);
   return 0;
 }
 
