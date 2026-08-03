@@ -3,13 +3,16 @@
 
 int main (int nargs, char ** args)
 {
+  const char * uartdev = "/dev/ttyUSB0";
+
   // idk which of these needs to be setup for simple waveform readout
   didaq_setup_t setup = { 
-    .spi_device = nargs > 3 ? args[3] : "/dev/ttyUSB0",
+    .spi_device = nargs > 3 ? args[3] : "/dev/spidev1.0",
     .spi_en_gpio_label = "NSPIBUS_EN", 
     .trig_ready_gpio_label = (nargs > 4) ? args[4]: 0,
     .spi_speed = nargs > 5 ? atoi(args[5]) : 0 ,
-    .pipeline_reads = false
+    .pipeline_reads = false,
+    .uart_device = uartdev
   };
   
   int adc_mask = nargs > 1 ? atoi(args[1]) : 0x3f;

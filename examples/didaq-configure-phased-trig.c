@@ -22,6 +22,7 @@ double servo_frac = 0.8;
 
 int main (int nargs, char ** args) 
 {
+  const char * uartdev = "/dev/ttyUSB0";
 
   for (int i = 1; i < nargs; i++)
   {
@@ -83,7 +84,8 @@ int main (int nargs, char ** args)
 
   didaq_setup_t setup = { 
     .spi_device = dev,
-    .spi_en_gpio_label = "NSPIBUS_EN", 
+    .spi_en_gpio_label = "NSPIBUS_EN",
+    .uart_device = uartdev
   };
 
 
