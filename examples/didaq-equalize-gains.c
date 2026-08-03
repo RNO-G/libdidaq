@@ -20,14 +20,14 @@ int main (int nargs, char ** args)
   didaq_reset_acq(dev);
 
   float final_rms[DIDAQ_NUM_CHANNELS] = {0.};
-  uint16_t gain_codes[DIDAQ_NUM_ADCS] = {0.};
-  gain_code = didaq_auto_gain(dev, 0x3f, target_rms, final_rms);
+  uint16_t gain_codes[DIDAQ_NUM_ADC] = {0.};
+  didaq_auto_gain(dev, adc_mask, target_rms, final_rms, gain_codes);
 
-  print("Final ADC gain codes and RMS values")
-  for(int adc = 0; adc<DIDAQ_NUM_ADCS; adc++)
+  printf("Final ADC gain codes and RMS values");
+  for(int adc = 0; adc<DIDAQ_NUM_ADC; adc++)
   {
     printf("ADC%i: Code %i; RMS CH%i %02f, CH%i %02f, CH%i %02f, CH%i %02f", adc, 
-            gain_code[0], adc*4, final_rms[4*adc], adc*4+1, final_rms[4*adc+1], 
+            gain_codes[0], adc*4, final_rms[4*adc], adc*4+1, final_rms[4*adc+1], 
             adc*4+2, final_rms[4*adc+2] ,adc*4+3, final_rms[4*adc+3]);
   }
 
