@@ -792,8 +792,8 @@ int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_c
   {
     if (!(adc_mask & (1<<adc))) continue;
 
-    ret = didaq_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf); CHECK(ret);
-    ret = didaq_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>8); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>4); CHECK(ret);
 
   }
   return 0;
