@@ -46,7 +46,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   //int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
   //if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
   
-  if(ret_count != num_words*BYTES_PER_WORD) return ret_bytes;
+  if(ret_count != num_words*BYTES_PER_WORD) return ret_count;
 
 
   return 0;
