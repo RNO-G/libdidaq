@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include "didaq.h"
 
-#define DIDAQ_NUM_ADC 6
 
 #define DIDAQ_SPI_HOST_ADDRESS 0x01020000
 

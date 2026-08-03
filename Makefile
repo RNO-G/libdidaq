@@ -20,10 +20,11 @@ SRC=src/didaq_regs.c src/didaq.c src/didaq_adc.c src/didaq_sdm.c
 EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs \
 	examples/didaq-wfs-csv examples/didaq-coin-thresh-scan examples/didaq-beam-thresh-scan \
 	examples/didaq-adc-reg examples/didaq-configure-coinc-trig examples/didaq-configure-phased-trig \
-	examples/didaq-read-adc-vendor-id
+	examples/didaq-read-adc-vendor-id   examples/didaq-equalize-gains
+
 OBJS = $(SRC:.c=.o)
 INC_PUBLIC=src/didaq.h src/didaq_regs.h src/didaq_adc.h src/didaq_sdm.h
-LINKLIBS=-ldidaq -lgpios
+LINKLIBS=-ldidaq -lgpios -lm
 
 INC_PRIVATE=src/didaq_internal.h src/didaq_helpers.h
 INCLUDES=$(INC_PUBLIC) $(INC_PRIVATE)

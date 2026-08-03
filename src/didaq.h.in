@@ -12,6 +12,7 @@
 #define DIDAQ_NUM_COINC 2
 #define DIDAQ_NUM_CHANNELS 24
 #define DIDAQ_MAX_LEN 4096
+#define DIDAQ_NUM_ADC 6
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -180,6 +181,7 @@ int didaq_get_thresholds( didaq_dev_t * dev,
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
 
+int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_mask, float target_rms, float * final_rms, uint16_t * gain_codes);
 typedef struct
 {
   float T[3];
@@ -187,7 +189,6 @@ typedef struct
 } didaq_core_temps_t;
 
 int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps);
-
 
 
 #endif

@@ -1,6 +1,7 @@
 #include "didaq.h"
 #include "didaq_internal.h"
 #include "didaq_regs.h"
+#include "didaq_adc.h"
 #include "didaq_sdm.h"
 #include "didaq_helpers.h"
 #include "didaq_adc.h"
@@ -9,7 +10,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <termios.h>
-
+#include <math.h>
 #include <errno.h>
 
 
@@ -783,6 +784,125 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 {
   return d->clock_estimate;
 }
+
+int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADC])
+{
+  int ret = 0;
+  for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
+  {
+    if (!(adc_mask & (1<<adc))) continue;
+
+    ret = didaq_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf); CHECK(ret);
+    ret = didaq_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>8); CHECK(ret);
+
+  }
+  return 0;
+
+}
+
+static double didaq_getrms(int N, uint8_t* X)
+{
+  double sum = 0;
+  double sum2 = 0;
+  for (int i = 0; i < N ; i++)
+  {
+    sum+=X[i];
+    sum2+=X[i]*X[i];
+  }
+
+  double mean = sum/N;
+  return sqrt(sum2/N - mean*mean);
+}
+
+int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, float * final_rms, uint16_t * gain_codes_out)
+{
+  // Sets full-scale range setting on each ADC
+  // The gain for each ADC core on the ADCs doesn't seem to appreciably change the RMS
+
+  float ch_rms[DIDAQ_NUM_CHANNELS] = {0.};
+  float adc_min_rms[DIDAQ_NUM_ADC] = {100, 100, 100, 100, 100, 100}; //start big
+  float adc_avg_rms[DIDAQ_NUM_ADC] = {0.};
+  uint16_t gain_codes[DIDAQ_NUM_ADC] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
+  uint8_t adc_mask = 0;
+  uint8_t adc_done = 0;
+  int gain_step = 10; // maybe move as an arg
+
+  // Setup readout
+  didaq_reset_acq(dev);
+
+  static uint8_t wfs[DIDAQ_NUM_CHANNELS][1024];
+
+  didaq_event_readout_t rdout = { .in  = {.len = 1024, .start = 0}, .wfs = 
+    { 
+      wfs[0], wfs[1], wfs[2], wfs[3], wfs[4], wfs[5],
+      wfs[6], wfs[7], wfs[8], wfs[9], wfs[10], wfs[11],
+      wfs[12], wfs[13], wfs[14], wfs[15], wfs[16], wfs[17],
+      wfs[18], wfs[19], wfs[20], wfs[21], wfs[22], wfs[23]
+    }
+  };
+
+  // gain equalize adcs using min (or avg) rms per adc. avg just in case a broken channel?
+  while(adc_done!=0x3f)
+  {
+
+    didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes);
+    sleep(1); // some time for adcs to settle after changing gain
+
+    didaq_force_trigger(dev);
+    didaq_event_readout(dev, &rdout);
+
+    // get min/avg rms values per adc
+    for(int ch=0; ch<DIDAQ_NUM_CHANNELS; ch++)
+    {
+      ch_rms[ch] = didaq_getrms(rdout.in.len, rdout.wfs[ch]);
+
+      adc_avg_rms[ch/4] += ch_rms[ch];
+      if(ch_rms[ch] < adc_min_rms[ch/4]) adc_min_rms[ch/4] = ch_rms[ch];
+
+    }
+
+
+    for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
+    {
+      adc_avg_rms[adc] = adc_avg_rms[adc]/6;
+      if(adc_set_mask & 1 << adc) 
+      {
+        adc_done |= 1<<adc;
+      }
+      else if(adc_avg_rms[adc]<target_rms)
+      {
+        if (gain_codes[adc]-gain_step < 0x2000)
+        {
+          // pushes below minimum recommended setting, stop adjusting
+          adc_done |= 1<<adc;
+        }
+        else
+        {
+          adc_mask |= 1<<adc;
+          adc_mask &= adc_set_mask;
+          gain_codes[adc] -= gain_step; // TODO: tune step parameter
+        }
+      }
+      else
+      {
+        adc_done |= 1<<adc;
+      }
+
+      if (final_rms && (adc_done & 1<<adc))
+      {
+        final_rms[adc*4] = ch_rms[adc*4];
+        final_rms[adc*4+1] = ch_rms[adc*4+1];
+        final_rms[adc*4+2] = ch_rms[adc*4+2];
+        final_rms[adc*4+3] = ch_rms[adc*4+3];
+      }
+    }
+  }
+
+  if (gain_codes_out) memcpy(gain_codes_out, gain_codes,sizeof(gain_codes));
+
+  return 0;
+}
+
 
 int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
 {
