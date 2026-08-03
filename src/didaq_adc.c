@@ -16,7 +16,7 @@
 
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
-  //usleep(10000);
+  usleep(10000);
 
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
@@ -34,27 +34,17 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   if(sent_bytes != 6) return -sent_bytes;
 
   memset(dev->uart_rx_buf, 0, sizeof(dev->uart_rx_buf));
-  //usleep(50000);
-
-  int ret_count = 0;
-  while(ret_count < num_words*BYTES_PER_WORD)
-  {
-    ret_count += read(dev->uart_fd, dev->uart_rx_buf+ret_count, num_words*BYTES_PER_WORD-ret_count);
-    usleep(1000);
-  }
+  usleep(50000);
   
-  //int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
-  //if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
-  
-  if(ret_count != num_words*BYTES_PER_WORD) return ret_count;
-
-
+  int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
+  if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
+ 
   return 0;
 }
 
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
-  //usleep(10000); // tune val... basically the fpga is much slower than the sbc
+  usleep(10000); // tune val... basically the fpga is much slower than the sbc
   memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
   // write to fpga reg
@@ -126,6 +116,7 @@ static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
   buffer_level = dev->uart_rx_buf[3];
   return buffer_level;
 }
+
 // TODO, rewrite for uart write/read
 static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes)
 {
@@ -180,27 +171,11 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
 // TODO, rewrite for uart write/read
 static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_trx)
 {
-  // wait for previous transaction to finish
-  //int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
-  //while((dev->uart_rx_buf[3]&0x1) == 0x1)
-  //{
-  //  // wait for status bit
-  //  usleep(10000);
-  //  ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
-  //  break; // hard code a break for now, tbd add a timeout
-  //}
 
   // tell fpga to do the spi transer with the adc
   int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
   int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); 
   
-  uint8_t done = 0;
-  while(done==0)
-  {
-    didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); 
-    done = dev->uart_rx_buf[3] & 0x01;
-    usleep(1000);
-  }
   CHECK(ret);
   return 0;
 }
