@@ -792,8 +792,8 @@ int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_c
   {
     if (!(adc_mask & (1<<adc))) continue;
 
-    ret = didaq_uart_adc_reg_write(dev, adc, 0x30, gain_codes[adc]&0xf); CHECK(ret);
-    ret = didaq_uart_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xf0)>>4); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, 0x30, (gain_codes[adc]&0xff00)>>8); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xff)); CHECK(ret);
 
   }
   return 0;
@@ -822,7 +822,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   float ch_rms[DIDAQ_NUM_CHANNELS] = {0.};
   float adc_min_rms[DIDAQ_NUM_ADC] = {0.}; //start big
   float adc_avg_rms[DIDAQ_NUM_ADC] = {0.};
-  uint16_t gain_codes[DIDAQ_NUM_ADC] = {0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000}; //assume default
+  uint16_t gain_codes[DIDAQ_NUM_ADC] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
   uint8_t adc_mask = 0;
   uint8_t adc_done = ~adc_set_mask;
   int gain_step = 10; // maybe move as an arg
@@ -842,7 +842,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   };
 
   // gain equalize adcs using min (or avg) rms per adc. avg just in case a broken channel?
-  while(adc_done!=0x3f)
+  while((adc_done&0x3f)!=0x3f)
   {
 
     didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes);
@@ -858,10 +858,9 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
 
       adc_avg_rms[ch/4] += ch_rms[ch];
       if(ch_rms[ch] < adc_min_rms[ch/4]) adc_min_rms[ch/4] = ch_rms[ch];
-
     }
     
-    printf("Set mask: %d, ADC mask: %d, Done mask: %d", adc_set_mask, adc_mask, adc_done);
+    printf("Set mask: %x, ADC mask: %x, Done mask: %x", adc_set_mask, adc_mask, adc_done);
     printf("Gain codes and RMS\n");
  
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
@@ -878,7 +877,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       else if(adc_avg_rms[adc]<target_rms)
       {
         // rms less than goal, adjust step
-        if ((gain_codes[adc]+gain_step) < 0x2000)
+        if ((gain_codes[adc]-gain_step) < 0x2000)
         {
           // pushes below minimum recommended setting, stop adjusting
           adc_mask &= ~(1<<adc);
@@ -893,6 +892,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       }
       else
       {
+        adc_mask |= (1<<adc);
         adc_done |= 1<<adc;
       }
 
