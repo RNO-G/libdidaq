@@ -35,7 +35,7 @@ int main (int nargs, char ** args)
   printf("FPGA Firm. Ver. %x%x%x%x", dev->uart_rx_buf[0], dev->uart_rx_buf[1],dev->uart_rx_buf[2], dev->uart_rx_buf[3]);
 
   // check low byte of adc vendor id
-  int val = didaq_adc_reg_read(dev, iadc, reg_addr, trx_bytes);
+  int val = didaq_uart_adc_reg_read(dev, iadc, reg_addr, trx_bytes);
   printf("does %d = 81?\n", val);
 
   return didaq_close(dev);
