@@ -302,7 +302,7 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
     dev->coin_ctl[i].num_coinc = trig->coinc[i].num_required;
     dev->coin_ctl[i].coin_win = trig->coinc[i].coinc_window;
     dev->coin_ctl[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xfff;
-    ret = didaq_write_COIN_CTL(dev,i,&dev->coin_ctl[i]); CHECK(ret);
+    ret = didaq_write_COIN_CTL(dev, i, &dev->coin_ctl[i]); CHECK(ret);
   }
 
   return ret;
@@ -410,10 +410,8 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   ret = didaq_sched_read_LAST_MISC1(dev, &misc1); CHECK(ret);
   ret = didaq_sched_read_LAST_TRIG(dev, &meta_trig); CHECK(ret);
 
-
-  rdout->meta.pps_counter = pps_counter.pps;
-  rdout->meta.last_coinc_pattern = misc0.last_coincidence_pattern;
-  rdout->meta.last_beam_pattern = misc1.last_beam_pattern;
+  // NB: the reads above are only scheduled. pps_counter/misc0/misc1/meta_trig stay
+  // untouched until didaq_complete() below, so they are copied out after that.
 
   didaq_reg_rdout_ctl_t rdout_ctl = {.start_rd_addr = rdout->in.start / 4};
 
@@ -437,15 +435,36 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   //clear the event
   didaq_reg_capture_ctl_t strobe ;
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
-  strobe.event_clr =1;
+  strobe.event_clr = 1;
 
   ret = didaq_sched_write_CAPTURE_CTL(dev, &strobe); CHECK(ret);
   ret = didaq_sched_write_CAPTURE_CTL(dev, &dev->capture_ctl); CHECK(ret);
 
   ret = didaq_complete(dev); CHECK(ret);
   clock_gettime(CLOCK_REALTIME, &rdout->meta.readout_time);
+
+  rdout->meta.pps_counter = pps_counter.pps;
+  rdout->meta.last_coinc_pattern = misc0.last_coincidence_pattern;
+  rdout->meta.last_beam_pattern = misc1.last_beam_pattern;
   rdout->meta.trig_type = meta_trig.trig_type;
-  dev->event_ready =0;
+
+  if (dev->dbg)
+  {
+    // raw is the full 32 bits as received (post byte-swap); decoded is after bitfield
+    // extraction. raw == 0 points at the FPGA, raw != 0 with decoded == 0 points here.
+    uint32_t raw_pps, raw_misc0, raw_misc1, raw_trig;
+    memcpy(&raw_pps, &pps_counter, sizeof(raw_pps));
+    memcpy(&raw_misc0, &misc0, sizeof(raw_misc0));
+    memcpy(&raw_misc1, &misc1, sizeof(raw_misc1));
+    memcpy(&raw_trig, &meta_trig, sizeof(raw_trig));
+    fprintf(dev->ferr, " ( META raw: PPS[0x56]=0x%08x MISC0[0x57]=0x%08x MISC1[0x58]=0x%08x TRIG[0x59]=0x%08x )\n",
+            raw_pps, raw_misc0, raw_misc1, raw_trig);
+    fprintf(dev->ferr, " ( META decoded: pps=%u coin_pat=0x%08x beam_pat=0x%04x trig_type=0x%02x ram_addr=%u )\n",
+            rdout->meta.pps_counter, rdout->meta.last_coinc_pattern,
+            rdout->meta.last_beam_pattern, rdout->meta.trig_type, meta_trig.ram_addr);
+  }
+
+  dev->event_ready = 0;
 
   return 0;
 }
@@ -747,7 +766,7 @@ int didaq_set_thresholds( didaq_dev_t * dev,
     dev->cached_coin_init = true;
     for (int chan = 0; chan < countof(coin->coin_thresholds); chan+=2)
     {
-       ret = didaq_sched_write_COIN_THRESH(dev, chan /2,
+       ret = didaq_sched_write_COIN_THRESH(dev, chan / 2,
           & ( didaq_reg_coin_thresh_t) {
             .thresh0 = coin->coin_thresholds[chan],
             .thresh1 = coin->coin_thresholds[chan+1]
@@ -767,12 +786,12 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 
 int didaq_get_core_temps(didaq_dev_t * dev,  didaq_core_temps_t * temps)
 {
-  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR, 
+  int ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_ADDR,
                           (didaq_sdm_data_t) { .bytes =  { 0x02, 0x00, 0x10, 0x19} });
   CHECK(ret);
 
 
-  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR, 
+  ret = didaq_sdm_write(dev, DIDAQ_SDM_COMMAND_LAST_WORD_ADDR,
                           (didaq_sdm_data_t) { .bytes =  { 0x00, 0x01, 0x00, 0x3c} });
   CHECK(ret);
 

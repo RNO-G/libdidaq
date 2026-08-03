@@ -29,14 +29,14 @@ static int didaq_append_tx(didaq_dev_t * dev, uint16_t addr, uint32_t payload)
   if (dev->dbg)
   {
     fprintf(dev->ferr, " ( APPENDTX [xfer%zu]: %x %x %x %x %x %x ) \n",
-                   idx,
-                   dev->tx_bufs[idx].payload[0],
-                   dev->tx_bufs[idx].payload[1],
-                   dev->tx_bufs[idx].payload[2],
-                   dev->tx_bufs[idx].payload[3],
-                   dev->tx_bufs[idx].payload[4],
-                   dev->tx_bufs[idx].payload[5]
-                   );
+      idx,
+      dev->tx_bufs[idx].payload[0],
+      dev->tx_bufs[idx].payload[1],
+      dev->tx_bufs[idx].payload[2],
+      dev->tx_bufs[idx].payload[3],
+      dev->tx_bufs[idx].payload[4],
+      dev->tx_bufs[idx].payload[5]
+    );
   }
 
   dev->xfers[idx].tx_buf = (uint64_t) &dev->tx_bufs[idx];
@@ -198,11 +198,11 @@ int didaq_complete(didaq_dev_t * dev)
 
       if (dev->dbg)
       {
-        fprintf(dev->ferr, " ( RX [xfer%d]:\n", ixfer);
+        fprintf(dev->ferr, " ( RX [xfer%d]: ", ixfer);
         char * buf = (char*) dev->xfers[ixfer].rx_buf;
         for (int ib = 0; ib < dev->xfers[ixfer].len; ib++)
         {
-          fprintf(dev->ferr,"%s0x%02hhx", ib == 0 ? "," : "", buf[ib]);
+          fprintf(dev->ferr,"%s0x%02hhx", ib == 0 ? "," : " ", buf[ib]);
         }
         fprintf(dev->ferr, " )\n");
       }

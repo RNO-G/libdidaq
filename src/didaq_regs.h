@@ -95,10 +95,14 @@ typedef struct
   uint32_t adc_power : 6;
 } didaq_reg_pd_ctl_t;
 
+/* Bitfields are LSB-first, so ram_addr is reg(9..0) and trig_type is reg(23..16). */
 typedef struct
 {
-  uint16_t  ram_addr: 10;
-  uint8_t   trig_type;
+  uint32_t ram_addr  : 10; /* reg(9..0) ram address of last ram write. Always 1023;
+                              no longer used as a trigger pointer. */
+  uint32_t __pad     : 6;
+  uint32_t trig_type : 8;  /* reg(23..16), LSB first: sw, phased, coinc(1), coinc(0),
+                              ext, pps, then two unused bits. */
 } didaq_reg_meta_trig_t;
 
 typedef struct
@@ -108,7 +112,7 @@ typedef struct
 
 typedef struct
 {
-  uint16_t start_rd_addr: 10;
+  uint32_t start_rd_addr : 10;
 } didaq_reg_rdout_ctl_t;
 
 typedef struct
@@ -135,7 +139,7 @@ typedef struct
   uint32_t en_module   : 1;
   uint32_t en_readout  : 1;
   uint32_t num_coinc   : 3;
-  uint32_t quad_mode   : 1; 
+  uint32_t quad_mode   : 1;
   uint32_t __pad0      : 2;
   uint32_t coin_win    : 4;
   uint32_t __pad1      : 4;
