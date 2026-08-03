@@ -820,7 +820,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   // The gain for each ADC core on the ADCs doesn't seem to appreciably change the RMS
 
   float ch_rms[DIDAQ_NUM_CHANNELS] = {0.};
-  float adc_min_rms[DIDAQ_NUM_ADC] = {0.}; //start big
+  float adc_min_rms[DIDAQ_NUM_ADC] = {0.};
   float adc_avg_rms[DIDAQ_NUM_ADC] = {0.};
   uint16_t gain_codes[DIDAQ_NUM_ADC] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
   uint8_t adc_mask = 0;
@@ -860,13 +860,13 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       if(ch_rms[ch] < adc_min_rms[ch/4]) adc_min_rms[ch/4] = ch_rms[ch];
     }
     
-    printf("Set mask: %x, ADC mask: %x, Done mask: %x", adc_set_mask, adc_mask, adc_done);
+    printf("Set mask: %x, ADC mask: %x, Done mask: %x\n", adc_set_mask, adc_mask, adc_done);
     printf("Gain codes and RMS\n");
  
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {
       adc_avg_rms[adc] = adc_avg_rms[adc]/6;
-      printf("ADC %d: gain code %d, RMS %03f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
+      printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
       if((adc_set_mask & (1 << adc) != (1<< adc)) || ((adc_done & (1 << adc)) == (1 << adc))) 
       {
@@ -896,7 +896,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
         adc_done |= 1<<adc;
       }
 
-      if (final_rms && (adc_done & 1<<adc))
+      if (final_rms && (adc_done & (1<<adc)))
       {
         final_rms[adc*4] = ch_rms[adc*4];
         final_rms[adc*4+1] = ch_rms[adc*4+1];
