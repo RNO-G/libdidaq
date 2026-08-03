@@ -26,7 +26,7 @@ int main (int nargs, char ** args)
   uint16_t gain_codes[DIDAQ_NUM_ADC] = {0.};
   didaq_auto_gain(dev, adc_mask, target_rms, final_rms, gain_codes);
 
-  printf("Final ADC gain codes and RMS values");
+  printf("Final ADC gain codes and RMS values\n");
   for(int adc = 0; adc<DIDAQ_NUM_ADC; adc++)
   {
     printf("ADC%i: Code %i; RMS CH%i %.2f, CH%i %.2f, CH%i %.2f, CH%i %.2f\n", adc, 
