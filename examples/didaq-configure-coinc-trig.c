@@ -33,8 +33,6 @@ int main (int nargs, char ** args)
 {
   uint32_t quad_mode = 0;
   uint8_t upper_or_lower = 0;
-  uint8_t upper_or_lower = 0;
-
   int channel_thresh[4] = {30, 30, 30, 30};
   const char * uartdev = "/dev/ttyUSB0";
 
@@ -100,7 +98,7 @@ int main (int nargs, char ** args)
   for (int trig = 0; trig<2; trig++)
   {
     // upper 12 ch = 2, lower 12 ch = 1
-    if (upper_or_lower & (1<<trig) == trig+1)
+    if ((upper_or_lower & (1<<trig)) == trig+1)
     {
       s.coinc[trig].enable = true;
       s.coinc[trig].enable_readout = true;
