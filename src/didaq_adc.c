@@ -3,6 +3,7 @@
 #include "didaq_internal.h"
 
 #include <errno.h>
+#include <string.h>
 
 #define READ_BYTE 0x01
 #define WRITE_BYTE 0x02
@@ -20,6 +21,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
   // high byte fills rx buf [0], low byte fulls rx buf[3]
+  memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
   dev->uart_tx_buf[0] = READ_BYTE;
   dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
@@ -31,7 +33,8 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6); // read req
   if(sent_bytes != 6) return -sent_bytes;
 
-  usleep(50000);
+  memset(dev->uart_rx_buf, 0, sizeof(dev->uart_rx_buf));
+  //usleep(50000);
 
   int ret_count = 0;
   while(ret_count < num_words*BYTES_PER_WORD)
@@ -52,6 +55,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
   //usleep(10000); // tune val... basically the fpga is much slower than the sbc
+  memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
   // write to fpga reg
   dev->uart_tx_buf[0] = WRITE_BYTE;
