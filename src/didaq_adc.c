@@ -11,23 +11,28 @@
 #define CHECK(RET)  if (RET) return RET;
 
 // these are the same as pydidaq, just ported to c
-
+// TODO for all, revise return type checking!
 
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
+  // high byte fills rx buf [0], low byte fulls rx buf[3]
+
   dev->uart_tx_buf[0] = READ_BYTE;
   dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
-  dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offser
+  dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offset
   dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
   dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
   dev->uart_tx_buf[5] = num_words;
 
-  int ret = write(dev->uart_fd, dev->uart_tx_buf, 6); CHECK(ret); // read req
-  int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD); // ret packet
-  
-  if(ret_bytes != num_words*BYTES_PER_WORD) return 1;
+  int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6); // read req
+  if(sent_bytes != 6) return -sent_bytes;
+
+  usleep(2000); // tune val or figure out num checking
+
+  int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
+  if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
 
   return 0;
 }
@@ -46,10 +51,11 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
   {
     // this should also take care of big/little endian ordering
     // e.g. fifo reset writes 0x3. these non-zero bits should be sent last to be cons. with pydidaq
-    dev->uart_tx_buf[i+5] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
+    dev->uart_tx_buf[i+6] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
   }
 
-  int ret = write(dev->uart_fd, dev->uart_tx_buf, 6+num_words*BYTES_PER_WORD); CHECK(ret);
+  int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6+num_words*BYTES_PER_WORD);
+  if(sent_bytes!=6+num_words*BYTES_PER_WORD) return -sent_bytes;
 
   return 0;
 }
@@ -68,13 +74,12 @@ static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
 
 int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 {
-  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1);
-  if(ret != BYTES_PER_WORD) return 1;
+  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1); CHECK(ret);
 
   // TODO check order
-  int message = (dev->uart_rx_buf[3]<<24) + (dev->uart_rx_buf[2]<<16) + (dev->uart_rx_buf[1]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[0]);
-  didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1);
-  didaq_uart_adc_fifo_reset(dev, true, true);
+  int message = (dev->uart_rx_buf[0]<<24) + (dev->uart_rx_buf[1]<<16) + (dev->uart_rx_buf[2]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[3]);
+  ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1); CHECK(ret);
+  ret = didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
 
   return 0;
 }
@@ -86,22 +91,22 @@ static int didaq_uart_adc_spi_fifo_level(didaq_dev_t * dev)
   // to be used to shuffle through the fifo to find real data
   int buffer_level = 0;
   int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1);
-  if(num_bytes != BYTES_PER_WORD) return 0; 
+  // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
   
-  buffer_level = dev->uart_rx_buf[3] + (dev->uart_rx_buf[2]<<8); //maybe 0 and 1?, might be 2 and 3?
+  buffer_level = dev->uart_rx_buf[3] + (dev->uart_rx_buf[2]<<8);
   return buffer_level;
 }
 
 // TODO, rewrite for uart write/read
 static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes)
 {
-  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_DATA, 1); CHECK(ret);
-  int data = dev->uart_rx_buf[0]; // maybe 3?
+  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_DATA, 1);
+  int data = dev->uart_rx_buf[3];
   return data;
 }
 
 //TODO, fill using uart write/read
-static int didaq_uart_adc_read_until_not_f(didaq_dev_t * dev)
+static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
 {
   // loop through fpga fifo and return the real data (first byte that is not 0xff)
   //int ret = didaq_uart_adc_read(dev)
@@ -157,22 +162,22 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
 int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes)
 {
   // set adc num
-  int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
+  int ret = didaq_uart_adc_select(dev, iadc);
   
   // reset fifo
-  ret += didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
+  ret = didaq_uart_adc_fifo_reset(dev, true, true);
   
   // fill tx buffer
   int packet = ((0x80 | ((0x3f&reg) >> 8))<<16) + ((reg & 0xff) << 8); // omg this byte ordering is all over the place
-  ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3); CHECK(ret);
+  ret = didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
 
   // initiate spi trx to adc
-  ret += didaq_uart_adc_do_spi_trx(dev, 3);
+  ret = didaq_uart_adc_do_spi_trx(dev, 3);
 
   // not sure about checking the ret
 
   // read return byte
-  int val = didaq_uart_adc_read_until_not_f(dev);
+  int val = didaq_uart_adc_read_until_not_ff(dev);
 
   return val;
 }
@@ -181,19 +186,16 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
 int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data)
 {
   // set adc num
-  int ret = didaq_uart_adc_select(dev, iadc);
+  int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
 
-  ret += didaq_uart_adc_fifo_reset(dev, true, true);
+  ret = didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
 
-  //[0x7F & ((0x3F00 & adr) >> 8), adr & 0xFF, data & 0xFF]
   int packet = ((0x7f & ((0x3f00&reg) >> 8))<<16) + ((reg & 0xff) << 8) + (data & 0xff); // omg this byte ordering is all over the place
-  ret += didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
+  ret = didaq_uart_adc_fill_tx_buffer(dev, packet, 3); CHECK(ret);
 
   // initiate spi trx
-  ret += didaq_uart_adc_do_spi_trx(dev, 3);
+  ret = didaq_uart_adc_do_spi_trx(dev, 3); CHECK(ret);
   
-  // check returns to make sure consistant with error codes, or if num bytes
-  CHECK(ret);
   return 0;
 }
 
