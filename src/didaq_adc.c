@@ -100,7 +100,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   // num bytes (words) usally just 4 (1), but letting it be flexible
   // high byte fills rx buf [0], low byte fulls rx buf[3]
 
-  int ret = didaq_uart_write(dev, addr, 0, 0); CHECK(ret); // read req
+  int ret = didaq_uart_write(dev, addr, 0, 1, 1); CHECK(ret); // read req
 
   memset(dev->uart_rx_buf, 0, sizeof(dev->uart_rx_buf));
 
@@ -141,7 +141,7 @@ static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
   if (wr) message |= 0x1;
   if (rd) message |= 0x2;
 
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_CTRL, message, 1); CHECK(ret);
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_CTRL, message, 1, 0); CHECK(ret);
 
   return 0;
 }
@@ -153,7 +153,7 @@ int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1); CHECK(ret);
 
   int message = (dev->uart_rx_buf[0]<<24) + (dev->uart_rx_buf[1]<<16) + (dev->uart_rx_buf[2]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[3]);
-  ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1); CHECK(ret);
+  ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_SETNGS_0, message, 1, 0); CHECK(ret);
   ret = didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
 
   return 0;
@@ -219,7 +219,7 @@ static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8
   int ret = 0;
   for(int i = 0; i<num_bytes; i++)
   {
-    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> (8*(num_bytes-i-1))) &0xff, 1); CHECK(ret);
+    ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> (8*(num_bytes-i-1))) &0xff, 1, 0); CHECK(ret);
   }
   return 0;
 }
@@ -230,7 +230,7 @@ static int didaq_uart_adc_select(didaq_dev_t * dev, uint8_t adc)
   // call before do rx or tx. accesses user reg space
   uint32_t spi_sel_reg_addr = 0x01080000 + 0x0D;
 
-  int ret = didaq_uart_write(dev, spi_sel_reg_addr, adc&0x7, 1); CHECK(ret);
+  int ret = didaq_uart_write(dev, spi_sel_reg_addr, adc&0x7, 1, 0); CHECK(ret);
 
   return 0;
 }
@@ -240,7 +240,7 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
 
   // tell fpga to do the spi transer with the adc
   int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); CHECK(ret);
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1, 0); CHECK(ret);
 
   // we should technically able to check the trx status bit to know if it's still happening
   // but who knows if it really works or not
