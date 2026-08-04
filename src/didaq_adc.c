@@ -104,7 +104,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
   int elapsed_us = 0;
-  int timeout_us = 100000;
+  int timeout_us = 500000;
 
   while(count_ret < num_words*BYTES_PER_WORD-1)
   {
