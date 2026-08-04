@@ -866,7 +866,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   while((adc_done&0x3f)!=0x3f)
   {
 
-    memset(adc_avg_rms, 0 , sizeof(adc_avg_rms));
+    memset(adc_avg_rms, 0 ,sizeof(adc_avg_rms));
   
     ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_mask, gain_codes); CHECK(ret);
     ret = didaq_usleep(500000); CHECK(ret); // some time for adcs to settle and old data to flush
@@ -891,7 +891,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       adc_avg_rms[adc] = adc_avg_rms[adc]/4.;
       printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
-      if(adc_avg_rms[adc]<target_rms)
+      if(adc_avg_rms[adc]<target_rms && ((adc_mask & (1<<adc)) == (1<<adc)))
       {
         // rms less than goal, adjust step
         if ((gain_codes[adc]-gain_step) < 0x2000)
