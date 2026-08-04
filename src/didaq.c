@@ -80,11 +80,8 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   int locked_uart = 0;
   struct termios tty;
 
-  if(!setup->uart_device || !*setup->uart_device)
-  {
-    fprintf(ferr, "Opening empty UART device\n");
-  }
-  else
+  // if passed, then open
+  if(setup->uart_device && *setup->uart_device)
   {
     uart_fd = open(setup->uart_device, O_RDWR);
 
