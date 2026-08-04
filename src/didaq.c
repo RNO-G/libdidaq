@@ -912,7 +912,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
 
       if (final_rms && (adc_done & (1<<adc)))
       {
-        printf("dbg ch 0-3 %.3f , %.3f, %.3f, %.3f\n");
+        printf("dbg ch %d-%d %.3f , %.3f, %.3f, %.3f\n",adc*4, adc*4+3, ch_rms[adc*4],ch_rms[adc*4+1],ch_rms[adc*4+2],ch_rms[adc*4+3]);
         final_rms[adc*4] = ch_rms[adc*4];
         final_rms[adc*4+1] = ch_rms[adc*4+1];
         final_rms[adc*4+2] = ch_rms[adc*4+2];
