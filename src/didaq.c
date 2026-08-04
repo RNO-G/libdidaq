@@ -4,7 +4,6 @@
 #include "didaq_adc.h"
 #include "didaq_sdm.h"
 #include "didaq_helpers.h"
-#include "didaq_adc.h"
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
@@ -18,7 +17,8 @@
 
 didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 {
-  if (!setup || !setup->spi_device || !*setup->spi_device || !setup->uart_device || !*setup->uart_device) return NULL;
+  // spi required
+  if (!setup || !setup->spi_device || !*setup->spi_device) return NULL;
   didaq_dev_t * dev = 0;
 
   FILE * ferr = setup->err_out ?: stderr;
@@ -75,102 +75,115 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bpw);
 
 
-  int uart_fd = open(setup->uart_device, O_RDWR);
-
-  if (uart_fd < 0)
-  {
-    fprintf(stderr,"Could not open %s\n", setup->uart_device);
-    close(uart_fd);
-    close(spi_fd);
-    return 0;
-  }
-
-  //advisory locks
-  int locked_uart = flock(uart_fd, LOCK_EX | LOCK_NB);
-  if (locked_uart < 0)
-  {
-    fprintf(ferr,"Could not get exclusive access to %s\n", setup->uart_device);
-    close(uart_fd);
-    close(spi_fd);
-    return NULL;
-  }
-
+  // uart not required
+  int uart_fd = -1;
+  int locked_uart = 0;
   struct termios tty;
 
-  tcgetattr(uart_fd,  &tty);
-
-  //clear parity bit
-  tty.c_cflag &= ~PARENB;
-
-  //one stop bit
-  tty.c_cflag &= ~CSTOPB;
-
-  //8 bits
-  tty.c_cflag &= ~CSIZE;
-  tty.c_cflag |= CS8;
-
-  //no hw flow control
-  tty.c_cflag &=~CRTSCTS;
-
-  //turn on read/disable ctrl lines
-  tty.c_cflag |= CREAD | CLOCAL;
-
-  //turn OFF canoncial mode
-  tty.c_lflag &= ~ICANON;
-
-  //disable echo bits (probably already disabled?)
-  tty.c_lflag &= ~ECHO;
-  tty.c_lflag &= ~ECHOE;
-  tty.c_lflag &= ~ECHONL;
-
-  //disable interpretation of signal chars
-  tty.c_lflag &= ~ISIG;
-
-  //disable software flow control
-  tty.c_iflag &= ~(IXON | IXOFF | IXANY);
-
-  //disable special handling of input  bytes
-  tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|INLCR|ICRNL);
-
-  //disable any special output modes
-  tty.c_oflag &= ~OPOST;
-  tty.c_oflag &= ~ONLCR;
-
-
-  //make it nonblocking
-  tty.c_cc[VTIME]=0;
-  tty.c_cc[VMIN]=0;
-
-  //baud rate
-  cfsetispeed(&tty, B115200);
-
-  //set the serial attrs
-  if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
+  if(!setup->uart_device || !*setup->uart_device)
   {
-    fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", setup->uart_device, errno, strerror(errno));
-    close(uart_fd);
-    close(spi_fd);
-    return 0;
+    fprintf(stderr, "Opening empty UART device\n");
   }
+  else
+  {
+    uart_fd = open(setup->uart_device, O_RDWR);
 
-  //drain the port
-  tcflush(uart_fd, TCIOFLUSH);
+    if (uart_fd < 0)
+    {
+      fprintf(stderr,"Could not open %s\n", setup->uart_device);
+      close(uart_fd);
+      return 0;
+    }
+
+    //advisory locks
+    locked_uart = flock(uart_fd, LOCK_EX | LOCK_NB);
+    if (locked_uart < 0)
+    {
+      fprintf(ferr,"Could not get exclusive access to %s\n", setup->uart_device);
+      if(uart_fd) close(uart_fd);
+      if(spi_fd) close(spi_fd);
+      return NULL;
+    }
+
+
+    tcgetattr(uart_fd,  &tty);
+
+    //clear parity bit
+    tty.c_cflag &= ~PARENB;
+
+    //one stop bit
+    tty.c_cflag &= ~CSTOPB;
+
+    //8 bits
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;
+
+    //no hw flow control
+    tty.c_cflag &=~CRTSCTS;
+
+    //turn on read/disable ctrl lines
+    tty.c_cflag |= CREAD | CLOCAL;
+
+    //turn OFF canoncial mode
+    tty.c_lflag &= ~ICANON;
+
+    //disable echo bits (probably already disabled?)
+    tty.c_lflag &= ~ECHO;
+    tty.c_lflag &= ~ECHOE;
+    tty.c_lflag &= ~ECHONL;
+
+    //disable interpretation of signal chars
+    tty.c_lflag &= ~ISIG;
+
+    //disable software flow control
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+    //disable special handling of input  bytes
+    tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|ICRNL);
+
+    //disable any special output modes
+    tty.c_oflag &= ~OPOST;
+    tty.c_oflag &= ~ONLCR;
+
+
+    //make it nonblocking
+    tty.c_cc[VTIME]=0;
+    tty.c_cc[VMIN]=0;
+
+    //baud rate
+    cfsetispeed(&tty, B115200);
+
+    //set the serial attrs
+    if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
+    {
+      fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", setup->uart_device, errno, strerror(errno));
+      if(uart_fd >= 0) close(uart_fd);
+      if(spi_fd) close(spi_fd);
+      return 0;
+    }
+
+    //drain the port
+    tcflush(uart_fd, TCIOFLUSH);
+  }
 
   //allocate memory for dev
   dev = calloc(sizeof(didaq_dev_t),1);
 
   if (!dev)
   {
-    close(spi_fd);
-    close(uart_fd);
+    if(spi_fd) close(spi_fd);
+    if(uart_fd >= 0) close(uart_fd);
     return NULL;
   }
 
   dev->uart_fd = uart_fd;
   dev->spi_fd = spi_fd;
 
-  // setup adc spi interface
-  didaq_uart_adc_set_spi_cfg(dev, 4);
+  // setup adc spi interface if uart opened
+  if(dev->uart_fd >= 0)
+  {
+    didaq_uart_adc_set_spi_cfg(dev, 4);
+  }
 
   memcpy(&dev->setup, setup, sizeof(dev->setup));
   memcpy(&dev->spi_en,  &spi_en, sizeof(spi_en));
@@ -244,7 +257,7 @@ int didaq_close (didaq_dev_t * dev)
     flock(dev->spi_fd, LOCK_UN);
     close(dev->spi_fd);
   }
-  if (dev->uart_fd)
+  if (dev->uart_fd >= 0)
   {
     flock(dev->uart_fd, LOCK_UN);
     close(dev->uart_fd);
@@ -787,13 +800,19 @@ uint32_t didaq_get_clock_rate_estimate(didaq_dev_t * d)
 
 int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADC])
 {
+  // set FS RANGE regs
+  // DIDAQ_ADC_REG_FS_RANGE maps to the high byte
+  // DIDAQ_ADC_REG_FS_RANGE+1 maps to the low byte
+
+  if(dev->uart_fd < 0) return -1;
+
   int ret = 0;
   for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
   {
     if (!(adc_mask & (1<<adc))) continue;
 
-    ret = didaq_uart_adc_reg_write(dev, adc, 0x30, (gain_codes[adc]&0xff00)>>8); CHECK(ret);
-    ret = didaq_uart_adc_reg_write(dev, adc, 0x31, (gain_codes[adc]&0xff)); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, DIDAQ_ADC_REG_FS_RANGE, (gain_codes[adc]&0xff00)>>8); CHECK(ret);
+    ret = didaq_uart_adc_reg_write(dev, adc, DIDAQ_ADC_REG_FS_RANGE+1, (gain_codes[adc]&0xff)); CHECK(ret);
 
   }
   return 0;
@@ -816,6 +835,8 @@ static double didaq_getrms(int N, uint8_t* X)
 
 int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, float * final_rms, uint16_t * gain_codes_out)
 {
+  if(dev->uart_fd < 0) return -1;
+
   // Sets full-scale range setting on each ADC
   // The gain for each ADC core on the ADCs doesn't seem to appreciably change the RMS
 
@@ -828,7 +849,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   int gain_step = 10; // maybe move as an arg
 
   // Setup readout
-  didaq_reset_acq(dev);
+  int ret = didaq_reset_acq(dev); CHECK(ret);
 
   static uint8_t wfs[DIDAQ_NUM_CHANNELS][1024];
 
@@ -845,11 +866,11 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   while((adc_done&0x3f)!=0x3f)
   {
 
-    didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes);
+    ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes); CHECK(ret);
     sleep(1); // some time for adcs to settle after changing gain
 
-    didaq_force_trigger(dev);
-    didaq_event_readout(dev, &rdout);
+    ret = didaq_force_trigger(dev); CHECK(ret);
+    ret = didaq_event_readout(dev, &rdout); CHECK(ret);
 
     // get min/avg rms values per adc
     for(int ch=0; ch<DIDAQ_NUM_CHANNELS; ch++)

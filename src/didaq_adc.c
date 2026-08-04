@@ -39,6 +39,8 @@ static int didaq_usleep(int time_sleep_us)
 
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
+  if(dev->uart_fd < 0) return -1;
+
   memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
   // write to fpga reg
@@ -84,6 +86,7 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 {
+  if(dev->uart_fd < 0) return -1;
 
   // read from fpga reg
   // num bytes (words) usally just 4 (1), but letting it be flexible
@@ -133,6 +136,8 @@ static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
 
 int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 {
+  if(dev->uart_fd < 0) return -1;
+
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1); CHECK(ret);
 
   int message = (dev->uart_rx_buf[0]<<24) + (dev->uart_rx_buf[1]<<16) + (dev->uart_rx_buf[2]<<8) + (((spi_speed_setting<<2) & 0x3C) | dev->uart_rx_buf[3]);
@@ -246,6 +251,8 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
 
 int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes)
 {
+  if(dev->uart_fd < 0) return -1;
+
   // set adc num, can probably optimize by tracking current adc in reg
   int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
   
@@ -268,6 +275,8 @@ int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8
 
 int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data)
 {
+  if(dev->uart_fd < 0) return -1;
+
   // set adc num
   int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
 
