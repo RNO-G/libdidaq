@@ -14,7 +14,7 @@
 
 // these are the same as pydidaq, just ported to c
 
-static int didaq_usleep(int time_sleep_us)
+int didaq_usleep(int time_sleep_us)
 {
   // helper function for abs time sleep
 
@@ -32,7 +32,7 @@ static int didaq_usleep(int time_sleep_us)
     t_end.tv_nsec = time_sleep_us * 1000 + t_end.tv_sec;
   }
 
-  while (EINTR==clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABS_TIME, &t_end, 0));
+  while (EINTR==clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t_end, 0));
 
   return 0;
 }
@@ -102,7 +102,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   int elapsed_us = 0;
   int timeout_us = 100;
 
-  while(count_ret < num_words*BYTE_PER_WORD-1)
+  while(count_ret < num_words*BYTES_PER_WORD-1)
   {
     ret = read(dev->uart_fd, dev->uart_rx_buf+count_ret, num_words*BYTES_PER_WORD-count_ret);
     if(ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) return -1;
