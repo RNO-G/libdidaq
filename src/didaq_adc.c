@@ -37,19 +37,22 @@ int didaq_usleep(int time_sleep_us)
   return 0;
 }
 
-int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
+int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words, int read_req)
 {
   if(dev->uart_fd < 0) return -1;
 
   memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
-  // write to fpga reg
-  dev->uart_tx_buf[0] = WRITE_BYTE;
+  // write/read req to fpga reg
+  dev->uart_tx_buf[0] = (read_req) ? READ_BYTE : WRITE_BYTE;
+
   dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
   dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offset
   dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
   dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
   dev->uart_tx_buf[5] = num_words; // usually 1
+
+  if(read_req) num_words = 0; // don't actually send anything on a request
 
   for (int i = 0; i< num_words*BYTES_PER_WORD; i++)
   {
