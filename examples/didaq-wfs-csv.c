@@ -3,8 +3,6 @@
 
 int main (int nargs, char ** args)
 {
-  const char * uartdev = "/dev/ttyUSB0";
-
   didaq_setup_t setup = { 
     .spi_device = nargs > 2 ? args[2] : "/dev/spidev1.0", 
     .spi_en_gpio_label = "NSPIBUS_EN", 

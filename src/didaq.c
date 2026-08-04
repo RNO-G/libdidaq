@@ -82,7 +82,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
   if(!setup->uart_device || !*setup->uart_device)
   {
-    fprintf(stderr, "Opening empty UART device\n");
+    fprintf(ferr, "Opening empty UART device\n");
   }
   else
   {
@@ -90,7 +90,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
 
     if (uart_fd < 0)
     {
-      fprintf(stderr,"Could not open %s\n", setup->uart_device);
+      fprintf(ferr,"Could not open %s\n", setup->uart_device);
       close(uart_fd);
       return 0;
     }
@@ -156,7 +156,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
     //set the serial attrs
     if (0 != tcsetattr(uart_fd, TCSANOW, &tty))
     {
-      fprintf(stderr,"Could not configure serial port %s :(. Got error %d: %s\n", setup->uart_device, errno, strerror(errno));
+      fprintf(ferr,"Could not configure serial port %s :(. Got error %d: %s\n", setup->uart_device, errno, strerror(errno));
       if(uart_fd >= 0) close(uart_fd);
       if(spi_fd) close(spi_fd);
       return 0;
@@ -889,7 +889,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {
       adc_avg_rms[adc] = adc_avg_rms[adc]/4.;
-      printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
+      //printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
       if(adc_avg_rms[adc]<target_rms && (adc_mask & (1<<adc)))
       {
