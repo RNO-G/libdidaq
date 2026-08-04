@@ -891,7 +891,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       adc_avg_rms[adc] = adc_avg_rms[adc]/4.;
       printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
-      if(adc_avg_rms[adc]<target_rms && ((adc_mask & (1<<adc)) == (1<<adc)))
+      if(adc_avg_rms[adc]<target_rms && (adc_mask & (1<<adc)))
       {
         // rms less than goal, adjust step
         if ((gain_codes[adc]-gain_step) < 0x2000)
@@ -914,7 +914,6 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
 
       if (final_rms && (adc_done & (1<<adc)))
       {
-        printf("dbg ch %d-%d %.3f , %.3f, %.3f, %.3f\n",adc*4, adc*4+3, ch_rms[adc*4],ch_rms[adc*4+1],ch_rms[adc*4+2],ch_rms[adc*4+3]);
         final_rms[adc*4] = ch_rms[adc*4];
         final_rms[adc*4+1] = ch_rms[adc*4+1];
         final_rms[adc*4+2] = ch_rms[adc*4+2];
