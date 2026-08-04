@@ -13,37 +13,28 @@
 
 // these are the same as pydidaq, just ported to c
 
-int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
+static int didaq_usleep(int time_sleep_us)
 {
-  usleep(10000);
+  // helper function to wrap usleep with error checking and enforcing sleep times?
+  int ret = 0;
+  int elapsed_us = 0;
+  struct timespec t0, tnow;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
 
-  // read from fpga reg
-  // num bytes (words) usally just 4 (1), but letting it be flexible
-  // high byte fills rx buf [0], low byte fulls rx buf[3]
-  memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
+  while(elapsed_us < time_sleep_us)
+  {
+    ret = usleep(time_sleep_us - elapsed_us);
+    if(!ret) return 0;
 
-  dev->uart_tx_buf[0] = READ_BYTE;
-  dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
-  dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offset
-  dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
-  dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
-  dev->uart_tx_buf[5] = num_words;
+    clock_gettime(CLOCK_MONOTONIC, &tnow);
+    elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
+  }
 
-  int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6); // read req
-  if(sent_bytes != 6) return -sent_bytes;
-
-  memset(dev->uart_rx_buf, 0, sizeof(dev->uart_rx_buf));
-  usleep(50000);
-  
-  int ret_bytes = read(dev->uart_fd, dev->uart_rx_buf, num_words*BYTES_PER_WORD);
-  if(ret_bytes != num_words*BYTES_PER_WORD) return ret_bytes;
- 
   return 0;
 }
 
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words)
 {
-  usleep(10000); // tune val... basically the fpga is much slower than the sbc
   memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
   // write to fpga reg
@@ -61,8 +52,65 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
     dev->uart_tx_buf[i+6] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
   }
 
-  int sent_bytes = write(dev->uart_fd, dev->uart_tx_buf, 6+num_words*BYTES_PER_WORD);
-  if(sent_bytes!=6+num_words*BYTES_PER_WORD) return -sent_bytes;
+  int sent_bytes = 0;
+  int ret = 0;
+  int timeout_ms = 100;
+  int elapsed_ms = 0;
+  struct timespec t0, tnow;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
+
+  while(sent_bytes < 6+num_words*BYTES_PER_WORD-1)
+  {
+    ret = write(dev->uart_fd, dev->uart_tx_buf+sent_bytes, 6+num_words*BYTES_PER_WORD-sent_bytes);
+
+    // if bad error stop, otherwise try again with remaining bytes?
+    if(ret < 0 && (errno != EAGAIN && errno != EWOULDBLOCK)) return -1;
+    else sent_bytes += ret;
+
+    ret = didaq_usleep(500); CHECK(ret);
+
+    // timeout
+    clock_gettime(CLOCK_MONOTONIC, &tnow);
+    elapsed_ms = (tnow.tv_sec - t0.tv_sec) * 1000 + (tnow.tv_nsec - t0.tv_nsec) / 1000000;
+    if (elapsed_ms > timeout_ms) return -sent_bytes;
+  }
+
+  return 0;
+}
+
+int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
+{
+
+  // read from fpga reg
+  // num bytes (words) usally just 4 (1), but letting it be flexible
+  // high byte fills rx buf [0], low byte fulls rx buf[3]
+
+  int ret = didaq_uart_write(dev, addr, 0, 0); CHECK(ret); // read req
+
+  memset(dev->uart_rx_buf, 0, sizeof(dev->uart_rx_buf));
+
+  int count_ret = 0;
+  struct timespec t0, tnow;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
+  int elapsed_ms = 0;
+  int timeout_ms = 100;
+
+  while(count_ret < num_words*BYTE_PER_WORD-1)
+  {
+    ret = read(dev->uart_fd, dev->uart_rx_buf+count_ret, num_words*BYTES_PER_WORD-count_ret);
+    if(ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) return -1;
+    else count_ret += ret;
+
+    // if we're good, return now, otherwise it will wait a bit and check again
+    if (count_ret >= num_words*BYTES_PER_WORD) return 0;
+
+    ret = didaq_usleep(100); CHECK(ret);
+
+    // timeout
+    clock_gettime(CLOCK_MONOTONIC, &tnow);
+    elapsed_ms = (tnow.tv_sec - t0.tv_sec) * 1000 + (tnow.tv_nsec - t0.tv_nsec) / 1000000;
+    if(elapsed_ms > timeout_ms) return -count_ret;
+  }
 
   return 0;
 }
@@ -95,9 +143,8 @@ static int didaq_uart_adc_spi_rx_fifo_level(didaq_dev_t * dev)
   // check how many bytes are in the fpga rx fifo
   // to be used to shuffle through the fifo to find real data
   int buffer_level = 0;
-  int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1);
-  // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
-  
+  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_NUM, 1); CHECK(ret);
+
   buffer_level = dev->uart_rx_buf[3] & 0xff;
   return buffer_level;
 }
@@ -107,7 +154,7 @@ static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
   // check how many bytes are in the fpga rx fifo
   // to be used to shuffle through the fifo to find real data
   int buffer_level = 0;
-  int num_bytes = didaq_uart_read(dev, DIDAQ_SPI_ADR_TX_NUM, 1);
+  int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_TX_NUM, 1); CHECK(ret);
   // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
   
   buffer_level = dev->uart_rx_buf[3];
@@ -117,6 +164,8 @@ static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
 static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes)
 {
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_RX_DATA, 1);
+  if(ret) return -1;
+
   int data = dev->uart_rx_buf[3];
   return data;
 }
@@ -127,14 +176,18 @@ static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
   //int ret = didaq_uart_adc_read(dev)
 
   int fifo_level = didaq_uart_adc_spi_rx_fifo_level(dev);
+  if(fifo_level < 0) return -1;
+
   int data = 0;
   for(int i = 0; i<fifo_level-1; i++)
   {
     data = didaq_uart_adc_read_single_rx_buffer(dev, 1);
+    if(data < 0) return -1;
     //if(data!=0xff) printf("uh oh, found %d in fifo before last entry\n", data);
   }
 
   data = didaq_uart_adc_read_single_rx_buffer(dev, 1);
+  if(data < 0) return -1;
 
   return data;
 }
@@ -142,7 +195,7 @@ static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
 static int didaq_uart_adc_fill_tx_buffer(didaq_dev_t * dev, uint32_t data, uint8_t num_bytes)
 {
   // fill fpga's tx buffer
-  int ret;
+  int ret = 0;
   for(int i = 0; i<num_bytes; i++)
   {
     ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_TX_DATA, (data >> (8*(num_bytes-i-1))) &0xff, 1); CHECK(ret);
@@ -166,31 +219,45 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
 
   // tell fpga to do the spi transer with the adc
   int packet = ((0xff&num_bytes_per_trx) << 16) + 1;
-  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); 
-  
-  CHECK(ret);
+  int ret = didaq_uart_write(dev, DIDAQ_SPI_ADR_ACTION, packet, 1); CHECK(ret);
+
+  // we should technically able to check the trx status bit to know if it's still happening
+  // but who knows if it really works or not
+  int spi_busy = 1;
+  while(spi_busy > 0)
+  {
+    ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
+    spi_busy = dev->uart_rx_buf[3] & 0x1;
+
+    if(spi_busy == 0) return 0;
+
+    ret = didaq_usleep(100); CHECK(ret);
+  }
+
+  // absolute wait option?
+  // ret = didaq_usleep(10000); CHECK(ret);
+
   return 0;
 }
 
 int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes)
 {
   // set adc num, can probably optimize by tracking current adc in reg
-  int ret = didaq_uart_adc_select(dev, iadc);
+  int ret = didaq_uart_adc_select(dev, iadc); CHECK(ret);
   
   // reset fifo
-  ret = didaq_uart_adc_fifo_reset(dev, true, true);
+  ret = didaq_uart_adc_fifo_reset(dev, true, true); CHECK(ret);
   
   // fill tx buffer
   int packet = ((0x80 | ((0x3f&reg) >> 8))<<16) + ((reg & 0xff) << 8);
-  ret = didaq_uart_adc_fill_tx_buffer(dev, packet, 3);
+  ret = didaq_uart_adc_fill_tx_buffer(dev, packet, 3); CHECK(ret);
 
   // initiate spi trx to adc
-  ret = didaq_uart_adc_do_spi_trx(dev, 3);
-
-  // not sure about checking the ret
+  ret = didaq_uart_adc_do_spi_trx(dev, 3); CHECK(ret);
 
   // read return byte
   int val = didaq_uart_adc_read_until_not_ff(dev);
+  if(val < 0) return -1;
 
   return val;
 }
