@@ -104,7 +104,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
   int elapsed_us = 0;
-  int timeout_us = 10000;
+  int timeout_us = 100000;
 
   while(count_ret < num_words*BYTES_PER_WORD-1)
   {
@@ -115,7 +115,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
     // if we're good, return now, otherwise it will wait a bit and check again
     if (count_ret >= num_words*BYTES_PER_WORD) return 0;
 
-    ret = didaq_usleep(100); CHECK(ret);
+    ret = didaq_usleep(1000); CHECK(ret);
 
     // timeout
     clock_gettime(CLOCK_MONOTONIC, &tnow);
