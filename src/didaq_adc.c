@@ -246,7 +246,7 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
   // but who knows if it really works or not
   int spi_busy = 1;
 
-  int timeout_us = 10000;
+  int timeout_us = 100000;
   int elapsed_us = 0;
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
