@@ -30,7 +30,7 @@ int main (int nargs, char ** args)
   for(int adc = 0; adc<DIDAQ_NUM_ADC; adc++)
   {
     printf("ADC%i: Code %i; RMS CH%i %.2f, CH%i %.2f, CH%i %.2f, CH%i %.2f\n", adc, 
-            gain_codes[0], adc*4, final_rms[4*adc], adc*4+1, final_rms[4*adc+1], 
+            gain_codes[adc], adc*4, final_rms[4*adc], adc*4+1, final_rms[4*adc+1], 
             adc*4+2, final_rms[4*adc+2] ,adc*4+3, final_rms[4*adc+3]);
   }
 

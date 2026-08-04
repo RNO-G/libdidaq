@@ -844,7 +844,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   float adc_min_rms[DIDAQ_NUM_ADC] = {0.};
   float adc_avg_rms[DIDAQ_NUM_ADC] = {0.};
   uint16_t gain_codes[DIDAQ_NUM_ADC] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}; //assume default
-  uint8_t adc_mask = 0;
+  uint8_t adc_mask = adc_set_mask;
   uint8_t adc_done = ~adc_set_mask;
   int gain_step = 10; // maybe move as an arg
 
@@ -866,7 +866,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   while((adc_done&0x3f)!=0x3f)
   {
 
-    ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes); CHECK(ret);
+    ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_mask, gain_codes); CHECK(ret);
     ret = didaq_usleep(50000); CHECK(ret); // some time for adcs to settle and old data to flush
     ret = didaq_force_trigger(dev); CHECK(ret);
     ret = didaq_event_readout(dev, &rdout); CHECK(ret);
@@ -888,9 +888,10 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       adc_avg_rms[adc] = adc_avg_rms[adc]/6;
       printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
-      if(((adc_set_mask & (1 << adc)) != (1<< adc)) || ((adc_done & (1 << adc)) == (1 << adc))) 
+      if(((adc_mask & (1 << adc)) != (1<< adc)) || ((adc_done & (1 << adc)) == (1 << adc))) 
       {
         // not in set mask, set done and ignore
+        // probably could just be empty
         adc_done |= (1<<adc);
         adc_mask &= ~(1<<adc);
       }
@@ -905,13 +906,12 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
         }
         else
         {
-          adc_mask |= (1<<adc);
-          adc_mask &= adc_set_mask;
           gain_codes[adc] -= gain_step; // TODO: tune step parameter
         }
       }
       else
       {
+        // still in the mask or not done, but above target rms, remove from mask and set done
         adc_mask |= (1<<adc);
         adc_done |= 1<<adc;
       }
@@ -926,7 +926,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
     }
   }
 
-  if (gain_codes_out) memcpy(gain_codes_out, gain_codes,sizeof(gain_codes));
+  if (gain_codes_out) memcpy(gain_codes_out, gain_codes, sizeof(gain_codes));
 
   return 0;
 }
