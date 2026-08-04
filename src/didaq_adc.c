@@ -43,20 +43,19 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
   memset(dev->uart_tx_buf, 0, sizeof(dev->uart_tx_buf));
 
-  // write/read req to fpga reg
+  // write or send read req to fpga
   dev->uart_tx_buf[0] = (read_req) ? READ_BYTE : WRITE_BYTE;
-
   dev->uart_tx_buf[1] = (addr & 0xff000000) >> 24; // map offset
   dev->uart_tx_buf[2] = (addr & 0xff0000) >> 16; // map offset
   dev->uart_tx_buf[3] = ((addr << 2) & 0xff00) >> 8; // convert word to byte addr
   dev->uart_tx_buf[4] = ((addr << 2 ) & 0xff); // convert word to byte addr
   dev->uart_tx_buf[5] = num_words; // usually 1
 
-  if(read_req) num_words = 0; // don't actually send anything on a request
+  if(read_req) num_words = 0; // don't actually send anything on a request. maybe it doesn't matter
 
   for (int i = 0; i< num_words*BYTES_PER_WORD; i++)
   {
-    // this should also take care of big/little endian ordering
+    // this should also take care of big/little endian byte ordering
     // e.g. fifo reset writes 0x3. these non-zero bits should be sent last to be cons. with pydidaq
     dev->uart_tx_buf[i+6] = (data >> (8*(num_words*BYTES_PER_WORD-i-1))) & 0xff;
   }
@@ -83,11 +82,13 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
     if (elapsed_us > timeout_us) 
     {
-      printf("timeout write, sent bytes %d\n", sent_bytes);
+      fprintf(stderr, "timeout uart write, sent %d bytes after %d us\n", sent_bytes, timeout_us);
       return -sent_bytes;
     }
   }
-  ret = didaq_usleep(50000); CHECK(ret);
+
+  // this doesn't seem needed now, but leave commented in case?
+  //ret = didaq_usleep(50000); CHECK(ret);
 
   return 0;
 }
@@ -126,7 +127,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
     if(elapsed_us > timeout_us)
     {
-      printf("timout read, read bytes %d\n", count_ret);
+      fprintf(stderr, "timout uart read, read %d bytes after %d us\n", count_ret, timeout_us);
       return -count_ret;
     }
   }
@@ -148,6 +149,7 @@ static int didaq_uart_adc_fifo_reset(didaq_dev_t * dev, bool wr, bool rd)
 
 int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting)
 {
+  // configure spi host on the fpga, should be done at startup
   if(dev->uart_fd < 0) return -1;
 
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_SETNGS_0, 1); CHECK(ret);
@@ -172,12 +174,10 @@ static int didaq_uart_adc_spi_rx_fifo_level(didaq_dev_t * dev)
 
 static int didaq_uart_adc_spi_tx_fifo_level(didaq_dev_t * dev)
 {
-  // check how many bytes are in the fpga rx fifo
-  // to be used to shuffle through the fifo to find real data
+  // check how many bytes are in the fpga tx fifo, not needed?
   int buffer_level = 0;
   int ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_TX_NUM, 1); CHECK(ret);
-  // if(num_bytes != BYTES_PER_WORD) return 0; // not sure about ret checking here
-  
+
   buffer_level = dev->uart_rx_buf[3];
   return buffer_level;
 }
@@ -193,8 +193,8 @@ static int didaq_uart_adc_read_single_rx_buffer(didaq_dev_t * dev, int num_bytes
 
 static int didaq_uart_adc_read_until_not_ff(didaq_dev_t * dev)
 {
-  // loop through fpga fifo and return the real data (first byte that is not 0xff)
-  //int ret = didaq_uart_adc_read(dev)
+  // loop through fpga fifo and return the real data at last fifo entry
+  // (first byte that is not 0xff usually)
 
   int fifo_level = didaq_uart_adc_spi_rx_fifo_level(dev);
   if(fifo_level < 0) return -1;
@@ -262,16 +262,13 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
   
     if (elapsed_us > timeout_us) 
     {
-      printf("timeout fpga-adc spi trx\n");
+      fprintf(stderr, "timeout fpga-adc spi transaction after %d us\n", timeout_us);
       return -1;
     }
     if(spi_busy == 0) return 0;
 
     ret = didaq_usleep(100); CHECK(ret);
   }
-
-  // absolute wait option?
-  // ret = didaq_usleep(10000); CHECK(ret);
 
   return 0;
 }

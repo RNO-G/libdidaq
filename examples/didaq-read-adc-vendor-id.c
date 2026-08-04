@@ -32,7 +32,7 @@ int main (int nargs, char ** args)
 
   // quick check for firmware version
   int ret = didaq_uart_read(dev,0x01080000,1);
-  if(!ret) printf("firm read failed, %d\n", ret);
+  if(ret) printf("firm read failed, %d\n", ret);
 
   printf("FPGA Firm. Ver. %x%x%x%x\n", dev->uart_rx_buf[0], dev->uart_rx_buf[1],dev->uart_rx_buf[2], dev->uart_rx_buf[3]);
 
