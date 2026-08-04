@@ -867,7 +867,8 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   {
 
     ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_mask, gain_codes); CHECK(ret);
-    ret = didaq_usleep(50000); CHECK(ret); // some time for adcs to settle and old data to flush
+    ret = didaq_usleep(500000); CHECK(ret); // some time for adcs to settle and old data to flush
+    ret = didaq_reset_acq(dev); CHECK(ret);
     ret = didaq_force_trigger(dev); CHECK(ret);
     ret = didaq_event_readout(dev, &rdout); CHECK(ret);
 
@@ -885,7 +886,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
  
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {
-      adc_avg_rms[adc] = adc_avg_rms[adc]/4;
+      adc_avg_rms[adc] = adc_avg_rms[adc]/4.;
       printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
       if(adc_avg_rms[adc]<target_rms)
@@ -905,8 +906,8 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       else
       {
         // still in the mask or not done, but above target rms, remove from mask and set done
-        adc_mask |= (1<<adc);
-        adc_done |= 1<<adc;
+        adc_mask &= ~(1<<adc);
+        adc_done |= (1<<adc);
       }
 
       if (final_rms && (adc_done & (1<<adc)))
