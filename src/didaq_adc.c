@@ -60,7 +60,7 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
   int sent_bytes = 0;
   int ret = 0;
-  int timeout_us = 1000;
+  int timeout_us = 10000;
   int elapsed_us = 0;
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -80,7 +80,7 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
     if (elapsed_us > timeout_us) 
     {
-      printf("timeout write\n");
+      printf("timeout write, sent bytes %d\n", sent_bytes);
       return -sent_bytes;
     }
   }
@@ -104,7 +104,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
   int elapsed_us = 0;
-  int timeout_us = 1000;
+  int timeout_us = 10000;
 
   while(count_ret < num_words*BYTES_PER_WORD-1)
   {
@@ -122,7 +122,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
     if(elapsed_us > timeout_us)
     {
-      printf("timout read\n");
+      printf("timout read, read bytes %d\n", count_ret);
       return -count_ret;
     }
   }
