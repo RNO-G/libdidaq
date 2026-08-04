@@ -84,6 +84,7 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
       return -sent_bytes;
     }
   }
+  ret = didaq_usleep(10000); CHECK(ret);
 
   return 0;
 }
