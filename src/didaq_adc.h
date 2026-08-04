@@ -106,6 +106,7 @@ enum e_didaq_spi_core_addr  {
   DIDAQ_SPI_ADR_RX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | 0x0B
 };
 
+int didaq_usleep(int time_sleep_us);
 int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words);
 int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words);
 int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting);

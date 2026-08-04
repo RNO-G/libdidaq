@@ -867,7 +867,7 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   {
 
     ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_set_mask, gain_codes); CHECK(ret);
-    sleep(1); // some time for adcs to settle after changing gain
+    ret = didaq_usleep(500); CHECK(ret); // some time for adcs to settle and old data to flush
 
     ret = didaq_force_trigger(dev); CHECK(ret);
     ret = didaq_event_readout(dev, &rdout); CHECK(ret);
