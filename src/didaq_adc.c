@@ -60,7 +60,7 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
   int sent_bytes = 0;
   int ret = 0;
-  int timeout_us = 100;
+  int timeout_us = 1000;
   int elapsed_us = 0;
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -104,7 +104,7 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
   int elapsed_us = 0;
-  int timeout_us = 100;
+  int timeout_us = 1000;
 
   while(count_ret < num_words*BYTES_PER_WORD-1)
   {
@@ -241,11 +241,26 @@ static int didaq_uart_adc_do_spi_trx(didaq_dev_t * dev, uint8_t num_bytes_per_tr
   // we should technically able to check the trx status bit to know if it's still happening
   // but who knows if it really works or not
   int spi_busy = 1;
+
+  int timeout_us = 10000;
+  int elapsed_us = 0;
+  struct timespec t0, tnow;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
+
   while(spi_busy > 0)
   {
     ret = didaq_uart_read(dev, DIDAQ_SPI_ADR_ACTION, 1); CHECK(ret);
     spi_busy = dev->uart_rx_buf[3] & 0x1;
 
+    // timeout
+    clock_gettime(CLOCK_MONOTONIC, &tnow);
+    elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
+  
+    if (elapsed_us > timeout_us) 
+    {
+      printf("timeout fpga-adc spi trx\n");
+      return -1;
+    }
     if(spi_busy == 0) return 0;
 
     ret = didaq_usleep(100); CHECK(ret);
