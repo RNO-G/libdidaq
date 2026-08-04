@@ -883,8 +883,8 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
       if(ch_rms[ch] < adc_min_rms[ch/4]) adc_min_rms[ch/4] = ch_rms[ch];
     }
     
-    printf("Set mask: %x, ADC mask: %x, Done mask: %x\n", adc_set_mask, adc_mask, adc_done);
-    printf("Gain codes and RMS\n");
+    //printf("Set mask: %x, ADC mask: %x, Done mask: %x\n", adc_set_mask, adc_mask, adc_done);
+    //printf("Gain codes and RMS\n");
  
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {

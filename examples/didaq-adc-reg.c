@@ -26,8 +26,6 @@ void usage()
 
 int main (int nargs, char **args)
 {
-  const char * uartdev = "/dev/ttyUSB0";
-
   int nops = 0;
   int adc = 0;
   for (int iarg = 1; iarg < nargs; iarg++)
@@ -98,8 +96,7 @@ int main (int nargs, char **args)
 
   didaq_setup_t setup = { 
     .spi_device = device,
-    .spi_en_gpio_label = "NSPIBUS_EN",
-    .uart_device = uartdev
+    .spi_en_gpio_label = "NSPIBUS_EN"
   };
 
   didaq_dev_t * dev = didaq_open(&setup);

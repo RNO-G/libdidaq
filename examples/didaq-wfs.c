@@ -12,8 +12,7 @@ int main (int nargs, char ** args)
     .spi_en_gpio_label = "NSPIBUS_EN", 
     .trig_ready_gpio_label = (nargs > 4) ? args[4]: 0,
     .spi_speed = nargs > 5 ? atoi(args[5]) : 0 ,
-    .pipeline_reads = false,
-    .uart_device = uartdev
+    .pipeline_reads = false
   };
   int N = nargs > 1 ? atoi(args[1]) : 10;
   bool force = nargs > 2 ? atoi(args[2]) : 0;

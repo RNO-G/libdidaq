@@ -34,7 +34,6 @@ int main (int nargs, char ** args)
   uint32_t quad_mode = 0;
   uint8_t upper_or_lower = 0;
   int channel_thresh[4] = {30, 30, 30, 30};
-  const char * uartdev = "/dev/ttyUSB0";
 
   for (int i = 1; i < nargs; i++)
   {
@@ -107,8 +106,7 @@ int main (int nargs, char ** args)
 
   didaq_setup_t setup = { 
     .spi_device = dev,
-    .spi_en_gpio_label = "NSPIBUS_EN",
-    .uart_device = uartdev
+    .spi_en_gpio_label = "NSPIBUS_EN"
   };
 
   didaq_dev_t * dev = didaq_open(&setup);
