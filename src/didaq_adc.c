@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 #define READ_BYTE 0x01
 #define WRITE_BYTE 0x02
