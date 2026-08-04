@@ -16,20 +16,23 @@
 
 static int didaq_usleep(int time_sleep_us)
 {
-  // helper function to wrap usleep with error checking and enforcing sleep times?
-  int ret = 0;
-  int elapsed_us = 0;
-  struct timespec t0, tnow;
+  // helper function for abs time sleep
+
+  struct timespec t0, t_end;
   clock_gettime(CLOCK_MONOTONIC, &t0);
 
-  while(elapsed_us < time_sleep_us)
+  if(time_sleep_us*1000 + t0.tv_nsec > 999999999)
   {
-    ret = usleep(time_sleep_us - elapsed_us);
-    if(!ret) return 0;
-
-    clock_gettime(CLOCK_MONOTONIC, &tnow);
-    elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
+    t_end.tv_sec = t0.tv_sec + 1;
+    t_end.tv_nsec = time_sleep_us * 1000 + t0.tv_nsec - 999999999;
   }
+  else
+  {
+    t_end.tv_sec = t0.tv_sec;
+    t_end.tv_nsec = time_sleep_us * 1000 + t_end.tv_sec;
+  }
+
+  while (EINTR==clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABS_TIME, &t_end, 0));
 
   return 0;
 }
@@ -55,8 +58,8 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
   int sent_bytes = 0;
   int ret = 0;
-  int timeout_ms = 100;
-  int elapsed_ms = 0;
+  int timeout_us = 100;
+  int elapsed_us = 0;
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
 
@@ -72,8 +75,8 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
 
     // timeout
     clock_gettime(CLOCK_MONOTONIC, &tnow);
-    elapsed_ms = (tnow.tv_sec - t0.tv_sec) * 1000 + (tnow.tv_nsec - t0.tv_nsec) / 1000000;
-    if (elapsed_ms > timeout_ms) return -sent_bytes;
+    elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
+    if (elapsed_us > timeout_us) return -sent_bytes;
   }
 
   return 0;
@@ -93,8 +96,8 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
   int count_ret = 0;
   struct timespec t0, tnow;
   clock_gettime(CLOCK_MONOTONIC, &t0);
-  int elapsed_ms = 0;
-  int timeout_ms = 100;
+  int elapsed_us = 0;
+  int timeout_us = 100;
 
   while(count_ret < num_words*BYTE_PER_WORD-1)
   {
@@ -109,8 +112,8 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
 
     // timeout
     clock_gettime(CLOCK_MONOTONIC, &tnow);
-    elapsed_ms = (tnow.tv_sec - t0.tv_sec) * 1000 + (tnow.tv_nsec - t0.tv_nsec) / 1000000;
-    if(elapsed_ms > timeout_ms) return -count_ret;
+    elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
+    if(elapsed_us > timeout_us) return -count_ret;
   }
 
   return 0;
