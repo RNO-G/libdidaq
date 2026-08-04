@@ -31,7 +31,9 @@ int main (int nargs, char ** args)
   uint8_t trx_bytes = 3; // always 3 for adc regs
 
   // quick check for firmware version
-  didaq_uart_read(dev,0x01080000,1);
+  int ret = didaq_uart_read(dev,0x01080000,1);
+  if(!ret) printf("firm read failed, %d\n", ret);
+
   printf("FPGA Firm. Ver. %x%x%x%x\n", dev->uart_rx_buf[0], dev->uart_rx_buf[1],dev->uart_rx_buf[2], dev->uart_rx_buf[3]);
 
   // check low byte of adc vendor id

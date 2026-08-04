@@ -78,7 +78,11 @@ int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t nu
     // timeout
     clock_gettime(CLOCK_MONOTONIC, &tnow);
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
-    if (elapsed_us > timeout_us) return -sent_bytes;
+    if (elapsed_us > timeout_us) 
+    {
+      printf("timeout write\n");
+      return -sent_bytes;
+    }
   }
 
   return 0;
@@ -116,7 +120,11 @@ int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words)
     // timeout
     clock_gettime(CLOCK_MONOTONIC, &tnow);
     elapsed_us = (tnow.tv_sec - t0.tv_sec) * 1000000 + (tnow.tv_nsec - t0.tv_nsec) / 1000;
-    if(elapsed_us > timeout_us) return -count_ret;
+    if(elapsed_us > timeout_us)
+    {
+      printf("timout read\n");
+      return -count_ret;
+    }
   }
 
   return 0;
