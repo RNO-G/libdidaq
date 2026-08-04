@@ -885,17 +885,10 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
  
     for(int adc=0; adc<DIDAQ_NUM_ADC; adc++)
     {
-      adc_avg_rms[adc] = adc_avg_rms[adc]/6;
+      adc_avg_rms[adc] = adc_avg_rms[adc]/4;
       printf("ADC %d: gain code %d, RMS %.3f\n", adc, gain_codes[adc], adc_avg_rms[adc]);
 
-      if(((adc_mask & (1 << adc)) != (1<< adc)) || ((adc_done & (1 << adc)) == (1 << adc))) 
-      {
-        // not in set mask, set done and ignore
-        // probably could just be empty
-        adc_done |= (1<<adc);
-        adc_mask &= ~(1<<adc);
-      }
-      else if(adc_avg_rms[adc]<target_rms)
+      if(adc_avg_rms[adc]<target_rms)
       {
         // rms less than goal, adjust step
         if ((gain_codes[adc]-gain_step) < 0x2000)
