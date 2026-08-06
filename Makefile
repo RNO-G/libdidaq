@@ -64,5 +64,3 @@ install: $(LIB) examples
 
 clean:
 	rm -f $(LIB) $(OBJS) $(NAMED_LIB) $(VERSIONED_LIB) $(EXAMPLES)
-
-

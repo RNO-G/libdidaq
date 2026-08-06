@@ -159,6 +159,16 @@ int didaq_close (didaq_dev_t * dev)
   return ret;
 }
 
+uint32_t didaq_get_revision(const didaq_dev_t * dev)
+{
+  return dev ? dev->revision : 0;
+}
+
+uint32_t didaq_get_board_id(const didaq_dev_t * dev)
+{
+  return dev ? dev->board_id : 0;
+}
+
 
 int didaq_reset_acq(didaq_dev_t * dev)
 {
@@ -304,7 +314,7 @@ int didaq_event_readout(didaq_dev_t * dev, didaq_event_readout_t * rdout)
   didaq_reg_pps_counter_t pps_counter = {0};
   didaq_reg_misc0_t misc0 = {0};
   didaq_reg_misc1_t misc1 = {0};
-  didaq_reg_meta_trig_t meta_trig =  { 0};
+  didaq_reg_meta_trig_t meta_trig = {0};
 
   ret = didaq_sched_read_LAST_EVT_CTR(dev, &rdout->meta.event_counter); CHECK(ret);
   ret = didaq_sched_read_LAST_TRIG_CTR(dev, &rdout->meta.trig_counter); CHECK(ret);

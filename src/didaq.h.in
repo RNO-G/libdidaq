@@ -132,6 +132,12 @@ typedef struct didaq_trigger_setup
 didaq_dev_t * didaq_open( const didaq_setup_t * setup);
 int didaq_close (didaq_dev_t * dev);
 
+/** The board identity, latched from the REVISION / BOARD_ID registers by didaq_open().
+ *  Both are read-only and don't change while the board is powered, so these just hand
+ *  back the cached values and touch no SPI. 0 if dev is NULL. */
+uint32_t didaq_get_revision(const didaq_dev_t * dev);
+uint32_t didaq_get_board_id(const didaq_dev_t * dev);
+
 //starts new run  / clears event
 int didaq_reset_acq(didaq_dev_t *dev);
 
