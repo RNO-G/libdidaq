@@ -74,29 +74,29 @@ enum didaq_regs
   DIDAQ_REGS(DIDAQ_DEFINE_ENUM)
 };
 
-typedef struct
+typedef struct didaq_reg_pps_counter
 {
   uint16_t pps;
   uint16_t __pad;
-} didaq_reg_pps_counter_t;;
+} didaq_reg_pps_counter_t;
 
-typedef struct
+typedef struct didaq_reg_misc1
 {
   uint32_t last_beam_pattern : DIDAQ_NUM_BEAMS;
 } didaq_reg_misc1_t;
 
-typedef struct
+typedef struct didaq_reg_misc0
 {
   uint32_t last_coincidence_pattern : DIDAQ_NUM_CHANNELS;
 } didaq_reg_misc0_t;
 
-typedef struct
+typedef struct didaq_reg_pd_ctl
 {
   uint32_t adc_power : 6;
 } didaq_reg_pd_ctl_t;
 
 /* Bitfields are LSB-first, so ram_addr is reg(9..0) and trig_type is reg(23..16). */
-typedef struct
+typedef struct didaq_reg_meta_trig
 {
   uint32_t ram_addr  : 10; /* reg(9..0) ram address of last ram write. Always 1023;
                               no longer used as a trigger pointer. */
@@ -105,17 +105,17 @@ typedef struct
                               ext, pps, then two unused bits. */
 } didaq_reg_meta_trig_t;
 
-typedef struct
+typedef struct didaq_reg_spi_sel
 {
   uint32_t spi_sel : 3;
 } didaq_reg_spi_sel_t;
 
-typedef struct
+typedef struct didaq_reg_rdout_ctl
 {
   uint32_t start_rd_addr : 10;
 } didaq_reg_rdout_ctl_t;
 
-typedef struct
+typedef struct didaq_reg_capture_ctl
 {
   uint8_t sw_trig            : 1;
   uint8_t __sw_trig_pad      : 7;
@@ -128,13 +128,13 @@ typedef struct
 } didaq_reg_capture_ctl_t;
 
 
-typedef struct
+typedef struct didaq_reg_capture_stat
 {
   uint32_t event_bsy : 1;
   uint32_t event_rdy : 1;
 } didaq_reg_capture_stat_t;
 
-typedef struct
+typedef struct didaq_reg_coin_trig_ctl
 {
   uint32_t en_module   : 1;
   uint32_t en_readout  : 1;
@@ -146,7 +146,7 @@ typedef struct
   uint32_t include_mask: 12;
 } didaq_reg_coin_trig_ctl_t;
 
-typedef struct
+typedef struct didaq_reg_phas_trig_ctl
 {
   uint32_t en_trig         : 1;
   uint32_t en_trig_to_data : 1;
@@ -159,7 +159,7 @@ typedef struct
   uint32_t beam_mask       : 12;
 } didaq_reg_phas_trig_ctl_t;
 
-typedef struct
+typedef struct didaq_reg_coin_thresh
 {
   uint8_t thresh0;
   uint8_t __pad0;
@@ -167,18 +167,18 @@ typedef struct
   uint8_t __pad1;
 } didaq_reg_coin_thresh_t;
 
-typedef struct
+typedef struct didaq_reg_phas_thresh
 {
   uint16_t trig;
   uint16_t servo;
 } didaq_reg_phas_thresh_t;
 
-typedef struct
+typedef struct didaq_reg_scaler
 {
   uint16_t scalers[2];
 } didaq_reg_scaler_t;
 
-typedef struct
+typedef struct didaq_reg_scal_sel
 {
   uint32_t which : 8;
   uint32_t __pad : 8;

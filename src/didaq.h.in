@@ -182,7 +182,7 @@ int didaq_get_thresholds( didaq_dev_t * dev,
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
 
 int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_mask, float target_rms, float * final_rms, uint16_t * gain_codes);
-typedef struct
+typedef struct didaq_core_temps
 {
   float T[3];
   struct timespec when;

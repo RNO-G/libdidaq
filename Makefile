@@ -17,7 +17,7 @@ VERSIONED_LIB = $(LIB).$(VER_MAJOR).$(VER_MINOR).$(VER_REV)
 NAMED_LIB = $(LIB).$(VER_MAJOR)
 
 SRC=src/didaq_regs.c src/didaq.c src/didaq_adc.c src/didaq_sdm.c
-EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs \
+EXAMPLES=examples/didaq-dump examples/didaq-get-scalers examples/didaq-wfs examples/didaq-rms \
 	examples/didaq-wfs-csv examples/didaq-coin-thresh-scan examples/didaq-beam-thresh-scan \
 	examples/didaq-adc-reg examples/didaq-configure-coinc-trig examples/didaq-configure-phased-trig \
 	examples/didaq-read-adc-vendor-id   examples/didaq-equalize-gains
