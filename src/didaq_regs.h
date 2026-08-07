@@ -29,6 +29,8 @@ int didaq_complete(didaq_dev_t * dev);
  *          this will prepopulate a buffer
  *  type:  the type we read to. the sizeof this type is relevant for endianess.
  *
+ *  NOTE: this doesn't support registers moving based on firmware version
+ *
  * */
 #define DIDAQ_REGS(REG)\
       /** name      , baseaddr , naddr,   rw, varlen,  type */\
@@ -50,18 +52,18 @@ int didaq_complete(didaq_dev_t * dev);
   REG(COIN_CTL      , 0x0038,    2,     1,   0,    didaq_reg_coin_trig_ctl_t )\
   REG(COIN_THRESH   , 0x003a,    12,    1,   0,    didaq_reg_coin_thresh_t )\
   REG(PHASED_CTL    , 0x0046,    1,     1,   0,    didaq_reg_phas_trig_ctl_t )\
-  REG(BEAM_THRESH   , 0x0047,    10,    1,   0,    didaq_reg_phas_thresh_t)\
-  REG(LAST_EVT_CTR  , 0x0052,    1,     0,   0,    uint32_t)\
-  REG(LAST_TRIG_CTR , 0x0053,    1,     0,   0,    uint32_t)\
-  REG(LAST_DEAD_CTR , 0x0054,    1,     0,   0,    uint32_t)\
-  REG(LAST_CLK_CTR  , 0x0055,    1,     0,   0,    uint32_t)\
-  REG(LAST_PPS_CTR  , 0x0056,    1,     0,   0,    didaq_reg_pps_counter_t)\
-  REG(LAST_MISC0    , 0x0057,    1,     0,   0,    didaq_reg_misc0_t)\
-  REG(LAST_MISC1    , 0x0058,    1,     0,   0,    didaq_reg_misc1_t)\
-  REG(LAST_TRIG     , 0x0059,    1,     0,   0,    didaq_reg_meta_trig_t)\
-  REG(RDOUT_CTL     , 0x005B,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
-  REG(SCAL_RD       , 0x005C,    1,     0,   0,    didaq_reg_scaler_t)\
-  REG(SCAL_SEL      , 0x005D,    1,     1,   0,    didaq_reg_scal_sel_t)\
+  REG(BEAM_THRESH   , 0x0047,    12,    1,   0,    didaq_reg_phas_thresh_t)\
+  REG(LAST_EVT_CTR  , 0x0053,    1,     0,   0,    uint32_t)\
+  REG(LAST_TRIG_CTR , 0x0054,    1,     0,   0,    uint32_t)\
+  REG(LAST_DEAD_CTR , 0x0055,    1,     0,   0,    uint32_t)\
+  REG(LAST_CLK_CTR  , 0x0056,    1,     0,   0,    uint32_t)\
+  REG(LAST_PPS_CTR  , 0x0057,    1,     0,   0,    didaq_reg_pps_counter_t)\
+  REG(LAST_MISC0    , 0x0058,    1,     0,   0,    didaq_reg_misc0_t)\
+  REG(LAST_MISC1    , 0x0059,    1,     0,   0,    didaq_reg_misc1_t)\
+  REG(LAST_TRIG     , 0x005A,    1,     0,   0,    didaq_reg_meta_trig_t)\
+  REG(RDOUT_CTL     , 0x005C,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
+  REG(SCAL_RD       , 0x005D,    1,     0,   0,    didaq_reg_scaler_t)\
+  REG(SCAL_SEL      , 0x005E,    1,     1,   0,    didaq_reg_scal_sel_t)\
   REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)
 
 

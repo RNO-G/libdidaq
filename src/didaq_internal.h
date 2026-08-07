@@ -47,6 +47,7 @@ struct didaq_dev
   size_t spi_bufsiz_complete;
   size_t spi_max_bufsiz;
   uint32_t revision;
+  uint32_t revision_int;
   uint32_t board_id;
   FILE * ferr;
   int dbg;
