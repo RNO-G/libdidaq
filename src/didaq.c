@@ -510,7 +510,7 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   {
     if(DIDAQ_NUM_BEAMS != 12)
     {
-      fprintf(ferr, "Software version %d.%d.%d does not support current firmware version %d.%d\n",
+      fprintf(dev->ferr, "Software version %d.%d.%d does not support current firmware version %d.%d\n",
               DIDAQ_VERSION_MAJOR, DIDAQ_VERSION_MINOR, DIDAQ_VERSION_REV, 
               ((dev->revision & 0xfff0)>>4), dev->revision & 0xf);
       return -1;
