@@ -499,11 +499,11 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   didaq_reg_scaler_t raw_scalers[48] = {0};
 
   // there needs to be a firm. ver. check here now...
-  int beam_trig_100mHz_gated_start = 32;
-  int beam_servo_1Hz_start = 38;
-  int num_pps_scaler_addr = 46;
+  int beam_trig_100mHz_gated_start = 31;
+  int beam_servo_1Hz_start = 36;
+  int num_pps_scaler_addr = 41;
   int num_pps_scaler_addr_sel = 0;
-  int total_beam_trig_start_addr = 41;
+  int total_beam_trig_start_addr = 42;
 
   // either we scrap the old format, or we need this check, and likely needs to be at open...
   if(dev->revision_int > 2*16+14)
@@ -587,6 +587,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
   int ret = 0;
   ret += fprintf(f, "[[DIDAQ at 0x%p]]\n", dev);
   ret += fprintf(f, "  Revision: 0x%x\n", dev->revision);
+  ret += fprintf(f, "  Revision Int: 0x%d\n", dev->revision_int);
   ret += fprintf(f, "  Board_ID: 0x%x\n", dev->board_id);
   ret += fprintf(f, "  nxfers queued: %lu\n", dev->nxfers);
   ret += fprintf(f, "  nxfers completed:%lu\n", dev->nxfers_complete);

@@ -61,7 +61,7 @@ int didaq_complete(didaq_dev_t * dev);
   REG(LAST_MISC0    , 0x0057,    1,     0,   0,    didaq_reg_misc0_t)\
   REG(LAST_MISC1    , 0x0058,    1,     0,   0,    didaq_reg_misc1_t)\
   REG(LAST_TRIG     , 0x0059,    1,     0,   0,    didaq_reg_meta_trig_t)\
-  REG(RDOUT_CTL     , 0x005A,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
+  REG(RDOUT_CTL     , 0x005B,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
   REG(SCAL_RD       , 0x005C,    1,     0,   0,    didaq_reg_scaler_t)\
   REG(SCAL_SEL      , 0x005D,    1,     1,   0,    didaq_reg_scal_sel_t)\
   REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)
