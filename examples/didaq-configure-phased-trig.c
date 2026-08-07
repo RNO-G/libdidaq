@@ -16,7 +16,7 @@ didaq_trigger_setup_t s = {
   }
 };
 
-int thresh[DIDAQ_NUM_BEAMS] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 ,100};
+int thresh[DIDAQ_NUM_BEAMS] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 ,1000};
 double servo_frac = 0.8;
 
 
