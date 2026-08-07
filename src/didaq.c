@@ -169,6 +169,12 @@ uint32_t didaq_get_board_id(const didaq_dev_t * dev)
   return dev ? dev->board_id : 0;
 }
 
+uint8_t didaq_get_coinc_num_required(const didaq_dev_t * dev, int which)
+{
+  if (!dev || which < 0 || which >= DIDAQ_NUM_COINC) return 0;
+  return dev->coin_ctl[which].num_coinc;
+}
+
 
 int didaq_reset_acq(didaq_dev_t * dev)
 {

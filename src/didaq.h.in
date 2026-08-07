@@ -143,6 +143,12 @@ int didaq_reset_acq(didaq_dev_t *dev);
 
 int didaq_configure_trigger(didaq_dev_t *dev, const didaq_trigger_setup_t * trig);
 
+/** The coincidence multiplicity currently programmed for half `which` (0 or 1): the
+ *  num_required that didaq_configure_trigger() last wrote, or whatever COIN_CTL held when
+ *  didaq_open() latched it. Served from the register shadow, so it touches no SPI. Returns 0
+ *  if dev is NULL or which is out of range -- a multiplicity no trigger can satisfy. */
+uint8_t didaq_get_coinc_num_required(const didaq_dev_t * dev, int which);
+
 int didaq_force_trigger(didaq_dev_t * dev);
 int didaq_event_wait(didaq_dev_t * dev, float timeout);
 
