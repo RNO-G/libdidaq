@@ -231,6 +231,7 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   didaq_sched_read_COIN_CTL(dev,0, &dev->coin_ctl[0]);
   didaq_sched_read_COIN_CTL(dev,1, &dev->coin_ctl[1]);
   didaq_complete(dev);
+  dev->revision_int = ((dev->revision & 0xfff0) >> 4) * 16 + (dev->revision & 0xf);
   dev->selected_adc = -1;
   dev->clock_estimate = 250000000;
 
@@ -513,6 +514,30 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
 {
   didaq_reg_scaler_t raw_scalers[48] = {0};
 
+  // there needs to be a firm. ver. check here now...
+  int beam_trig_100mHz_gated_start = 31;
+  int beam_servo_1Hz_start = 36;
+  int num_pps_scaler_addr = 41;
+  int num_pps_scaler_addr_sel = 0;
+  int total_beam_trig_start_addr = 42;
+
+  // either we scrap the old format, or we need this check, and likely needs to be at open...
+  if(dev->revision_int > 2*16+14)
+  {
+    if(DIDAQ_NUM_BEAMS != 12)
+    {
+      fprintf(dev->ferr, "Software version %d.%d.%d does not support current firmware version %d.%d\n",
+              DIDAQ_VERSION_MAJOR, DIDAQ_VERSION_MINOR, DIDAQ_VERSION_REV, 
+              ((dev->revision & 0xfff0)>>4), dev->revision & 0xf);
+      return -1;
+    }
+    beam_trig_100mHz_gated_start = 32;
+    beam_servo_1Hz_start = 38;
+    total_beam_trig_start_addr = 44;
+    num_pps_scaler_addr = 45;
+    num_pps_scaler_addr_sel = 1;
+  }
+
   int ret = 0;
 
   ret = didaq_sched_write_SCAL_SEL(dev, &scal_latch[0]); CHECK(ret);
@@ -541,17 +566,17 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
   for (int i = 0; i < DIDAQ_NUM_BEAMS; i++)
   {
     scal->beam_trig_100mHz[i] = raw_scalers[26 + i/2].scalers[(i) % 2];
-    scal->beam_trig_100mHz_gated[i] = raw_scalers[31 + i/2].scalers[(i) % 2];
-    scal->beam_servo_1Hz[i] = raw_scalers[36 + i/2].scalers[(i) % 2];
+    scal->beam_trig_100mHz_gated[i] = raw_scalers[beam_trig_100mHz_gated_start + i/2].scalers[(i) % 2];
+    scal->beam_servo_1Hz[i] = raw_scalers[beam_servo_1Hz_start + i/2].scalers[(i) % 2];
   }
 
-  scal->num_pps = raw_scalers[41].scalers[0];
+  scal->num_pps = raw_scalers[num_pps_scaler_addr].scalers[num_pps_scaler_addr_sel];
   scal->clk_rate = raw_scalers[47].scalers[1] <<16;
   scal->clk_rate += raw_scalers[47].scalers[0];
   dev->clock_estimate = scal->clk_rate;
-  scal->total_beam_100mHz = raw_scalers[42].scalers[0];
-  scal->total_beam_100mHz_gated = raw_scalers[42].scalers[1];
-  scal->total_beam_1Hz= raw_scalers[43].scalers[0];
+  scal->total_beam_100mHz = raw_scalers[total_beam_trig_start_addr].scalers[0];
+  scal->total_beam_100mHz_gated = raw_scalers[total_beam_trig_start_addr].scalers[1];
+  scal->total_beam_1Hz= raw_scalers[total_beam_trig_start_addr+1].scalers[0];
 
   return 0;
 }
@@ -578,6 +603,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
   int ret = 0;
   ret += fprintf(f, "[[DIDAQ at 0x%p]]\n", dev);
   ret += fprintf(f, "  Revision: 0x%x\n", dev->revision);
+  ret += fprintf(f, "  Revision Int: 0x%d\n", dev->revision_int);
   ret += fprintf(f, "  Board_ID: 0x%x\n", dev->board_id);
   ret += fprintf(f, "  nxfers queued: %lu\n", dev->nxfers);
   ret += fprintf(f, "  nxfers completed:%lu\n", dev->nxfers_complete);
@@ -588,6 +614,10 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
   didaq_reg_capture_stat_t capture_stat = {0};
   didaq_reg_capture_ctl_t capture_ctl = {0};
+  didaq_phased_thresholds_t p_thresh = {0};
+  didaq_coin_thresholds_t c_thresh = {0};
+
+  if(didaq_get_thresholds(dev, & p_thresh, &c_thresh, true)) return -1;
 
   // should we just use the cached one here? meh. this is an important debug tool.
   if (didaq_sched_read_CAPTURE_CTL(dev,&capture_ctl)) return -1;
@@ -597,13 +627,31 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
   ret += fprintf(f, "  capture_stat = { .event_busy = %u, .event_rdy = %u }\n", capture_stat.event_bsy, capture_stat.event_rdy);
   ret += fprintf(f, "  capture_ctl = { .sw_trig = %u, .event_clr = %u, .run_ctr_rst = %u, .pps_en = %u, .ext_en = %u }\n", capture_ctl.sw_trig, capture_ctl.event_clr, capture_ctl.run_ctr_rst, capture_ctl.pps_en, capture_ctl.ext_en);
+  ret += fprintf(f, "\n");
   ret += fprintf(f, "  phased_ctl = { .en_trig = %u, .en_trig_to_data = %u, .req_consec_wins = %u, .divide_by_2 = %u, .channel_mask = 0b%b, .beam_mask = 0b%b  }\n" ,
                         dev->phased_ctl.en_trig, dev->phased_ctl.en_trig_to_data, dev->phased_ctl.req_consec_wins, dev->phased_ctl.divide_by_2, dev->phased_ctl.channel_mask, dev->phased_ctl.beam_mask);
+  ret += fprintf(f, "  Beam Trigger Thresholds:\n");
+  
+  for(int bm = 0; bm<DIDAQ_NUM_BEAMS; bm++)
+  {
+    ret += fprintf(f, "  BM %02d: %05d", bm, p_thresh.beam_trig_thresholds[bm]);
+    if((bm+1)%4 == 0) ret += fprintf(f,"\n");
+  }
+
+  ret += fprintf(f, "\n");
   ret += fprintf(f, "  coin_ctl[2] = {\n "
                     "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }, \n "
-                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }\n  }\n; "
+                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }\n"
                     , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].include_mask
                     , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].include_mask);
+  ret += fprintf(f, "  Channel Trigger Thresholds:\n");
+  
+  for(int ch = 0; ch<DIDAQ_NUM_CHANNELS; ch++)
+  {
+    ret += fprintf(f, "  CH %02d: %03d", ch, c_thresh.coin_thresholds[ch]);
+    if((ch+1)%4 == 0) ret += fprintf(f,"\n");
+  }
+  ret += fprintf(f, "\n");
 
 #ifdef DIDAQ_ENABLE_TEMPS
   didaq_core_temps_t temps = {0};
@@ -778,7 +826,13 @@ int didaq_set_thresholds( didaq_dev_t * dev,
     dev->cached_phased_init = true;
     for (int beam = 0; beam < countof(phased->beam_trig_thresholds); beam++)
     {
-      ret = didaq_sched_write_BEAM_THRESH(dev, DIDAQ_NUM_BEAMS -1 -beam, // seem to be backwards?
+      int beam_index = DIDAQ_NUM_BEAMS -1 -beam;
+      if(dev->revision_int > 16*2 + 14) 
+      {
+        beam_index = beam;
+      }
+
+      ret = didaq_sched_write_BEAM_THRESH(dev, beam_index,
           & (didaq_reg_phas_thresh_t) {
            .trig = phased->beam_trig_thresholds[beam],
            .servo = phased->beam_servo_thresholds[beam]
