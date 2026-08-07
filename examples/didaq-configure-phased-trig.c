@@ -12,7 +12,7 @@ const char * dev = "/dev/spidev1.0";
 didaq_trigger_setup_t s = {
   .phased =
   {
-      .enable = true, .enable_readout =true,
+      .enable = false, .enable_readout =false,
   }
 };
 
@@ -28,6 +28,11 @@ int main (int nargs, char ** args)
     {
       dev = args[++i];
     }
+    else if (!strcmp(args[i]),"-e")
+    {
+      s.phased.enable = true;
+      s.phased.enable_readout true;
+    }
     else if (!strcmp(args[i],"-2"))
     {
       s.phased.divide_by_2 = true ;
@@ -36,7 +41,6 @@ int main (int nargs, char ** args)
     {
       s.phased.require_consecutive_windows = true;
     }
- 
     else if (!strcmp(args[i], "-B") && i < nargs-1)
     {
       uint32_t M = strtoul(args[++i], 0, 0);
@@ -73,7 +77,7 @@ int main (int nargs, char ** args)
     else
     {
 
-      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -2 -c] [ -B meam mask ] [ -C channel_mask ] [-t THRESH] [-T BEAM THRESH] [-f servo_frac] \n");
+      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -e enable ] [ -2 -c ] [ -B meam mask ] [ -C channel_mask ] [ -t THRESH ] [ -T BEAM THRESH ] [ -f servo_frac ] \n");
 
       return 0;
     }
