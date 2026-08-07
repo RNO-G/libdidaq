@@ -122,16 +122,16 @@ int main (int nargs, char ** args)
   if(upper_or_lower & 1)
   {
     printf("Using lower 12 ch thresholds of %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
-          channel_thresh[0], channel_thresh[1], channel_thresh[2], channel_thresh[3],
-          channel_thresh[4], channel_thresh[5], channel_thresh[6], channel_thresh[7],
-          channel_thresh[8], channel_thresh[9], channel_thresh[10], channel_thresh[11]);
+          th.coin_thresholds[0], th.coin_thresholds[1], th.coin_thresholds[2], th.coin_thresholds[3],
+          th.coin_thresholds[4], th.coin_thresholds[5], th.coin_thresholds[6], th.coin_thresholds[7],
+          th.coin_thresholds[8], th.coin_thresholds[9], th.coin_thresholds[10], th.coin_thresholds[11]);
   }
   if(upper_or_lower & 2)
   {
     printf("Using upper 12 ch thresholds of %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
-          channel_thresh[12], channel_thresh[13], channel_thresh[14], channel_thresh[15],
-          channel_thresh[16], channel_thresh[17], channel_thresh[18], channel_thresh[19],
-          channel_thresh[20], channel_thresh[21], channel_thresh[22], channel_thresh[23]);
+          th.coin_thresholds[12], th.coin_thresholds[13], th.coin_thresholds[14], th.coin_thresholds[15],
+          th.coin_thresholds[16], th.coin_thresholds[17], th.coin_thresholds[18], th.coin_thresholds[19],
+          th.coin_thresholds[20], th.coin_thresholds[21], th.coin_thresholds[22], th.coin_thresholds[23]);
   }
   sleep(25);
   didaq_read_scalers(dev, &scal);
