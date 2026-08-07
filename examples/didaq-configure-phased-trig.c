@@ -28,10 +28,10 @@ int main (int nargs, char ** args)
     {
       dev = args[++i];
     }
-    else if (!strcmp(args[i]),"-e")
+    else if (!strcmp(args[i],"-e"))
     {
       s.phased.enable = true;
-      s.phased.enable_readout true;
+      s.phased.enable_readout = true;
     }
     else if (!strcmp(args[i],"-2"))
     {
