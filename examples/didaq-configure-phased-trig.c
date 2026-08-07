@@ -16,7 +16,7 @@ didaq_trigger_setup_t s = {
   }
 };
 
-int thresh[DIDAQ_NUM_BEAMS] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
+int thresh[DIDAQ_NUM_BEAMS] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 ,100};
 double servo_frac = 0.8;
 
 
@@ -99,9 +99,9 @@ int main (int nargs, char ** args)
 			th.beam_servo_thresholds[j] = thresh[j]* servo_frac;
 	}
 	didaq_set_thresholds(dev, &th, 0);
-	printf("Using thresholds of [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
-      thresh[0], thresh[1], thresh[2], thresh[3], thresh[4],
-      thresh[5], thresh[6], thresh[7], thresh[8], thresh[9]
+	printf("Using thresholds of %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
+      thresh[0], thresh[1], thresh[2], thresh[3], thresh[4], thresh[5],
+      thresh[6], thresh[7], thresh[8], thresh[9], thresh[10], thresh[11]
       );
 
   printf("Sleeping for 20 seconds to get a good read\n");
