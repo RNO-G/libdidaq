@@ -618,13 +618,13 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
   for(int bm = 0; bm<DIDAQ_NUM_BEAMS; bm++)
   {
     ret += fprintf(f, "  BM %02d: %05d", bm, p_thresh.beam_trig_thresholds[bm]);
-    if(bm%4==0) ret += fprintf(f,"\n");
+    if((bm+1)%4 == 0) ret += fprintf(f,"\n");
   }
 
   ret += fprintf(f, "\n");
   ret += fprintf(f, "  coin_ctl[2] = {\n "
                     "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }, \n "
-                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }\n  }\n; "
+                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }\n; "
                     , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].include_mask
                     , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].include_mask);
   ret += fprintf(f, "  Channel Trigger Thresholds:\n");
@@ -632,7 +632,7 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
   for(int ch = 0; ch<DIDAQ_NUM_CHANNELS; ch++)
   {
     ret += fprintf(f, "  CH %02d: %03d", ch, c_thresh.coin_thresholds[ch]);
-    if(ch%4==0) ret += fprintf(f,"\n");
+    if((ch+1)%4 == 0) ret += fprintf(f,"\n");
   }
   ret += fprintf(f, "\n");
 
