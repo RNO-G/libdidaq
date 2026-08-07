@@ -850,8 +850,8 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
 
   static uint8_t wfs[DIDAQ_NUM_CHANNELS][1024];
 
-  didaq_event_readout_t rdout = { .in  = {.len = 1024, .start = 0}, .wfs = 
-    { 
+  didaq_event_readout_t rdout = { .in  = {.len = 1024, .start = 0}, .wfs =
+    {
       wfs[0], wfs[1], wfs[2], wfs[3], wfs[4], wfs[5],
       wfs[6], wfs[7], wfs[8], wfs[9], wfs[10], wfs[11],
       wfs[12], wfs[13], wfs[14], wfs[15], wfs[16], wfs[17],
@@ -864,10 +864,9 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   {
 
     memset(adc_avg_rms, 0 ,sizeof(adc_avg_rms));
-  
+ 
     ret = didaq_set_fs_gain_codes(dev, 0x3f & adc_mask, gain_codes); CHECK(ret);
     ret = didaq_usleep(500000); CHECK(ret); // some time for adcs to settle and old data to flush
-    ret = didaq_reset_acq(dev); CHECK(ret);
     ret = didaq_force_trigger(dev); CHECK(ret);
     ret = didaq_event_readout(dev, &rdout); CHECK(ret);
 
@@ -920,6 +919,8 @@ int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_set_mask, float target_rms, f
   }
 
   if (gain_codes_out) memcpy(gain_codes_out, gain_codes, sizeof(gain_codes));
+
+  ret = didaq_reset_acq(dev); CHECK(ret);
 
   return 0;
 }
