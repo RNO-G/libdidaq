@@ -26,8 +26,6 @@ void usage()
 
 int main (int nargs, char **args)
 {
-
-
   int nops = 0;
   int adc = 0;
   for (int iarg = 1; iarg < nargs; iarg++)

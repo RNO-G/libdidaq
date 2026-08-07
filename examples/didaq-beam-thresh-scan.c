@@ -25,7 +25,6 @@ double servo_frac = 0.8;
 
 int main (int nargs, char ** args) 
 {
-
   for (int i = 1; i < nargs; i++)
   {
     if (!strcmp(args[i],"-d") && i < nargs-1)  
@@ -86,7 +85,7 @@ int main (int nargs, char ** args)
 
   didaq_setup_t setup = { 
     .spi_device = dev,
-    .spi_en_gpio_label = "NSPIBUS_EN", 
+    .spi_en_gpio_label = "NSPIBUS_EN"
   };
 
 

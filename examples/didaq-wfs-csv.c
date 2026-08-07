@@ -6,7 +6,7 @@ int main (int nargs, char ** args)
   didaq_setup_t setup = { 
     .spi_device = nargs > 2 ? args[2] : "/dev/spidev1.0", 
     .spi_en_gpio_label = "NSPIBUS_EN", 
-    .spi_speed = nargs > 3 ? atoi(args[3]) : 0 
+    .spi_speed = nargs > 3 ? atoi(args[3]) : 0
   };
   int N = nargs > 1 ? atoi(args[1]) : 10;
 

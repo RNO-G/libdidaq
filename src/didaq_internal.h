@@ -28,6 +28,9 @@ struct didaq_dev
 {
   didaq_setup_t setup;
   int spi_fd;
+  int uart_fd;
+  uint8_t uart_tx_buf[32];
+  uint8_t uart_rx_buf[32];
 
   gpios_line_t spi_en;
   gpios_line_t trig_rdy;

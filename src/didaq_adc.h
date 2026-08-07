@@ -7,11 +7,10 @@
 #include <stdint.h>
 #include "didaq.h"
 
-#define DIDAQ_NUM_ADC 6
 
 #define DIDAQ_SPI_HOST_ADDRESS 0x01020000
 
-
+// ADC register map
 enum e_didaq_adc_reg
 {
   DIDAQ_ADC_REG_CONFIG_A      =   0x000,
@@ -94,17 +93,25 @@ enum e_didaq_adc_reg
   DIDAQ_ADC_REG_GAIN5         =   0x367
 };
 
-
+// Word addresses for SPI host registers.
 enum e_didaq_spi_core_addr  {
-  DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | (0x00 << 2),
-  DIDAQ_SPI_ADR_SETNGS_0 = DIDAQ_SPI_HOST_ADDRESS  | (0x03 << 2),
-  DIDAQ_SPI_ADR_SETNGS_1 = DIDAQ_SPI_HOST_ADDRESS  | (0x04 << 2),
-  DIDAQ_SPI_ADR_CTRL     = DIDAQ_SPI_HOST_ADDRESS  | (0x05 << 2),
-  DIDAQ_SPI_ADR_ACTION   = DIDAQ_SPI_HOST_ADDRESS  | (0x07 << 2),
-  DIDAQ_SPI_ADR_TX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | (0x08 << 2),
-  DIDAQ_SPI_ADR_RX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | (0x0A << 2),
-  DIDAQ_SPI_ADR_RX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | (0x0B << 2)
+  DIDAQ_SPI_ADR_CORE_REV = DIDAQ_SPI_HOST_ADDRESS  | 0x00,
+  DIDAQ_SPI_ADR_SETNGS_0 = DIDAQ_SPI_HOST_ADDRESS  | 0x03,
+  DIDAQ_SPI_ADR_SETNGS_1 = DIDAQ_SPI_HOST_ADDRESS  | 0x04,
+  DIDAQ_SPI_ADR_CTRL     = DIDAQ_SPI_HOST_ADDRESS  | 0x05,
+  DIDAQ_SPI_ADR_ACTION   = DIDAQ_SPI_HOST_ADDRESS  | 0x07,
+  DIDAQ_SPI_ADR_TX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | 0x08,
+  DIDAQ_SPI_ADR_TX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | 0x09,
+  DIDAQ_SPI_ADR_RX_DATA  = DIDAQ_SPI_HOST_ADDRESS  | 0x0A,
+  DIDAQ_SPI_ADR_RX_NUM   = DIDAQ_SPI_HOST_ADDRESS  | 0x0B
 };
+
+int didaq_usleep(int time_sleep_us);
+int didaq_uart_read(didaq_dev_t * dev, uint32_t addr, uint8_t num_words);
+int didaq_uart_write(didaq_dev_t * dev, uint32_t addr, uint32_t data, uint8_t num_words, int read_req);
+int didaq_uart_adc_set_spi_cfg(didaq_dev_t * dev, uint8_t spi_speed_setting);
+int didaq_uart_adc_reg_read(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t trx_bytes);
+int didaq_uart_adc_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint16_t data);
 
 
 int didaq_adc_sched_reg_write(didaq_dev_t * dev, uint8_t iadc, uint16_t reg, uint8_t value);
