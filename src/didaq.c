@@ -516,7 +516,7 @@ int didaq_read_scalers(didaq_dev_t *dev, didaq_scalers_t * scal)
       return -1;
     }
     beam_trig_100mHz_gated_start = 32;
-    beam_servo_1Hz_start = 36;
+    beam_servo_1Hz_start = 38;
     num_pps_scaler_addr = 45;
     num_pps_scaler_addr_sel = 1;
     total_beam_trig_start_addr = 44;
@@ -791,8 +791,6 @@ int didaq_set_thresholds( didaq_dev_t * dev,
       if(dev->revision_int > 16*2 + 14) 
       {
         beam_index = beam;
-        // maybe add if bm > 10, write_BEAM_THRESH2 or something instead of the headache of version
-        // dependent register mapping?
       }
 
       ret = didaq_sched_write_BEAM_THRESH(dev, beam_index,
