@@ -292,13 +292,12 @@ int didaq_reset_acq(didaq_dev_t * dev)
 
   didaq_reg_capture_ctl_t strobe;
   memcpy(&strobe, &dev->capture_ctl, sizeof(strobe));
-  strobe.event_clr =1;
+  strobe.event_clr = 1;
   strobe.run_ctr_rst = 1;
 
   int ret = didaq_sched_write_CAPTURE_CTL(dev, &dev->capture_ctl); CHECK(ret);
   ret = didaq_sched_write_CAPTURE_CTL(dev, &strobe); CHECK(ret);
   ret = didaq_sched_write_CAPTURE_CTL(dev, &dev->capture_ctl); CHECK(ret);
-
 
   return didaq_complete(dev);
 }
