@@ -52,7 +52,7 @@ $(NAMED_LIB): $(VERSIONED_LIB)
 $(VERSIONED_LIB): $(OBJS)
 	 $(CC) -shared $(LDFLAGS) -Wl,-soname,$(NAMED_LIB) -o $@ $^
 
-install: $(LIB) examples
+install: $(LIB) $(EXAMPLES)
 	install -d $(DESTDIR)$(PREFIX)/$(LIBDIR)
 	install -m 0755 $(VERSIONED_LIB) $(DESTDIR)$(PREFIX)/$(LIBDIR)/
 	ln -sfr $(DESTDIR)$(PREFIX)/$(LIBDIR)/$(VERSIONED_LIB) $(DESTDIR)$(PREFIX)/$(LIBDIR)/$(NAMED_LIB)
