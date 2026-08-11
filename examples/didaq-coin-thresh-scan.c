@@ -25,11 +25,10 @@ didaq_trigger_setup_t s = {
   }
 };
 
-int start_thresh = 1; 
-int step = 1;
+int start_thresh = 1;
 int end_thresh = 255;
 int thresh_step = 1;
-int wait_time = 20;
+int wait_time = 10;
 
 
 int main (int nargs, char ** args) 
@@ -73,7 +72,7 @@ int main (int nargs, char ** args)
     }
     else if (!strcmp(args[i],"-s") && i < nargs-1)
     {
-      step = strtoul(args[++i], 0, 0);
+      thresh_step = strtoul(args[++i], 0, 0);
     }
     else
     {
@@ -105,10 +104,10 @@ int main (int nargs, char ** args)
     sleep(1);
     didaq_read_scalers(dev, &scal);
     didaq_dump_scalers(&scal,stdout);
-    sleep(10);
+    sleep(wait_time);
     didaq_read_scalers(dev, &scal);
     didaq_dump_scalers(&scal,stdout);
-    sleep(10);
+    sleep(wait_time);
     didaq_read_scalers(dev, &scal);
     didaq_dump_scalers(&scal,stdout);
   }
