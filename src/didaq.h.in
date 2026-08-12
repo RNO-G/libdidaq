@@ -185,13 +185,24 @@ int didaq_set_thresholds( didaq_dev_t * dev,
 // this may be cached unles force_read = true
 int didaq_get_thresholds( didaq_dev_t * dev,
                           didaq_phased_thresholds_t * phased,
-                          didaq_coin_thresholds_t * coin, 
+                          didaq_coin_thresholds_t * coin,
                           bool force_read);
 
 
 
 /** this gets updated each time we read scalers */
 uint32_t didaq_get_clock_rate_estimate(didaq_dev_t *d);
+
+/** Writes the FS_RANGE (full-scale / gain) code of each ADC selected in adc_mask. Only the
+ *  gain_codes entries whose bit is set in adc_mask are used. Returns 0 on success.
+ *
+ *  Codes:
+ *    0x0000  <500 mVPP (degraded performance, not recommended)
+ *    0x2000   500 mVPP (recommended minimum)
+ *    0xA000   800 mVPP (default)
+ *    0xFFFF  1000 mVPP (maximum)
+ */
+int didaq_set_fs_gain_codes(didaq_dev_t * dev, uint8_t adc_mask, uint16_t gain_codes[DIDAQ_NUM_ADC]);
 
 int didaq_auto_gain(didaq_dev_t * dev, uint8_t adc_mask, float target_rms, float * final_rms, uint16_t * gain_codes);
 typedef struct didaq_core_temps
