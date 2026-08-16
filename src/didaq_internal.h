@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "didaq_regs.h"
 #include "didaq.h"
+#include <stdatomic.h>
 
 /** This file is not part of the API, and may change willy-nilly */
 
@@ -62,7 +63,7 @@ struct didaq_dev
   //start at -1 to indicate nothing selected
   int selected_adc;
 
-  uint32_t clock_estimate;
+  _Atomic uint32_t clock_estimate;
 
   bool cached_phased_init;
   bool cached_coin_init;
