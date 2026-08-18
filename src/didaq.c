@@ -230,6 +230,9 @@ didaq_dev_t * didaq_open(const didaq_setup_t * setup)
   didaq_sched_read_PHASED_CTL(dev, &dev->phased_ctl);
   didaq_sched_read_COIN_CTL(dev,0, &dev->coin_ctl[0]);
   didaq_sched_read_COIN_CTL(dev,1, &dev->coin_ctl[1]);
+  didaq_sched_read_COIN_MASK(dev,1, &dev->coin_mask[0]);
+  didaq_sched_read_COIN_MASK(dev,1, &dev->coin_mask[1]);
+
   didaq_complete(dev);
   dev->selected_adc = -1;
   dev->clock_estimate = 250000000;
@@ -324,11 +327,13 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
   {
     dev->coin_ctl[i].en_module = trig->coinc[i].enable;
     dev->coin_ctl[i].en_readout = trig->coinc[i].enable_readout;
-    dev->coin_ctl[i].quad_mode = trig->coinc[i].quad_mode;
     dev->coin_ctl[i].num_coinc = trig->coinc[i].num_required;
     dev->coin_ctl[i].coin_win = trig->coinc[i].coinc_window;
-    dev->coin_ctl[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xfff;
+    dev->coin_ctl[i].clks_over_thresh = trig->coinc[i].clks_over_thresh;
+    dev->coin_mask[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xffffff;
     ret = didaq_write_COIN_CTL(dev, i, &dev->coin_ctl[i]); CHECK(ret);
+    ret = didaq_write_COIN_MASKS(dev, i, &dev->coin_ctl[i].include_mask); CHECK(ret);
+
   }
 
   return ret;

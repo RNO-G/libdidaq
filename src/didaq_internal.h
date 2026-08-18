@@ -38,6 +38,7 @@ struct didaq_dev
   didaq_reg_capture_ctl_t capture_ctl;
   didaq_reg_phas_trig_ctl_t phased_ctl;
   didaq_reg_coin_trig_ctl_t coin_ctl[DIDAQ_NUM_COINC];
+  didaq_reg_coin_trig_mask_t coin_mask[DIDAQ_NUM_COINC];
 
   struct spi_ioc_transfer xfers[511];
   didaq_txn_t tx_bufs[511]; // memory for tx transactions

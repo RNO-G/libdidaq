@@ -62,7 +62,8 @@ int didaq_complete(didaq_dev_t * dev);
   REG(RDOUT_CTL     , 0x005B,    1,     1,   0,    didaq_reg_rdout_ctl_t)\
   REG(SCAL_RD       , 0x005C,    1,     0,   0,    didaq_reg_scaler_t)\
   REG(SCAL_SEL      , 0x005D,    1,     1,   0,    didaq_reg_scal_sel_t)\
-  REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)
+  REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)\
+  REG(COIN_MASKS    , 0x0062,    2,     0,   0,    uint32_t)
 
 
 
@@ -136,15 +137,19 @@ typedef struct didaq_reg_capture_stat
 
 typedef struct didaq_reg_coin_trig_ctl
 {
-  uint32_t en_module   : 1;
-  uint32_t en_readout  : 1;
-  uint32_t num_coinc   : 3;
-  uint32_t quad_mode   : 1;
-  uint32_t __pad0      : 2;
-  uint32_t coin_win    : 4;
-  uint32_t __pad1      : 4;
-  uint32_t include_mask: 12;
+  uint32_t en_module        :  1;
+  uint32_t en_readout       :  1;
+  uint32_t num_coinc        :  5;
+  uint32_t coin_win         :  5;
+  uint32_t clks_over_thresh :  4;
+  uint32_t __pad            : 16;
 } didaq_reg_coin_trig_ctl_t;
+
+typedef struct didaq_reg_coin_trig_mask
+{
+  uint32_t include_mask : 24;
+  uint32_t __pad : 8;
+} didaq_reg_coin_trig_mask_t;
 
 typedef struct didaq_reg_phas_trig_ctl
 {
@@ -161,10 +166,8 @@ typedef struct didaq_reg_phas_trig_ctl
 
 typedef struct didaq_reg_coin_thresh
 {
-  uint8_t thresh0;
-  uint8_t __pad0;
-  uint8_t thresh1;
-  uint8_t __pad1;
+  uint16_t thresh0;
+  uint16_t thresh1;
 } didaq_reg_coin_thresh_t;
 
 typedef struct didaq_reg_phas_thresh
