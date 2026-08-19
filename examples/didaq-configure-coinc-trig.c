@@ -71,7 +71,7 @@ int main (int nargs, char ** args)
     else if (!strcmp(args[i], "-o") && i < nargs-1)
     {
       int n = atoi(args[++i]);
-      s.coinc[0].clks_over_thresh= n;
+      s.coinc[0].clks_over_thresh = n;
       s.coinc[1].clks_over_thresh = n;
     }
     else if (!strcmp(args[i],"-M0") && i < nargs-1)
@@ -98,9 +98,9 @@ int main (int nargs, char ** args)
     else if (strcmp(args[i], "-T") && i < nargs-1)
     {
       uint32_t thresh = strtoul(args[++i], 0, 0);
-      for(int i = 0; i<24; i++)
+      for(int j = 0; j<24; j++)
       {
-        channel_thresh[i] = thresh;
+        channel_thresh[j] = thresh;
       }
     }
     else
