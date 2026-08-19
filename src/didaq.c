@@ -644,10 +644,10 @@ int didaq_dump(didaq_dev_t * dev, FILE * f, int flags)
 
   ret += fprintf(f, "\n");
   ret += fprintf(f, "  coin_ctl[2] = {\n "
-                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }, \n "
-                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .include_mask = 0b%b }\n"
-                    , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].include_mask
-                    , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].include_mask);
+                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .clks_over_thresh = %u, .include_mask = 0b%b }, \n "
+                    "    { .en_module = %u, .en_readout = %u, .num_coinc = %u, .coinc_win = %u, .clks_over_thresh = %u, .include_mask = 0b%b }\n"
+                    , dev->coin_ctl[0].en_module, dev->coin_ctl[0].en_readout, dev->coin_ctl[0].num_coinc, dev->coin_ctl[0].coin_win, dev->coin_ctl[0].clks_over_thresh, dev->coin_mask[0].include_mask
+                    , dev->coin_ctl[1].en_module, dev->coin_ctl[1].en_readout, dev->coin_ctl[1].num_coinc, dev->coin_ctl[1].coin_win, dev->coin_ctl[1].clks_over_thresh, dev->coin_mask[1].include_mask);
   ret += fprintf(f, "  Channel Trigger Thresholds:\n");
   
   for(int ch = 0; ch<DIDAQ_NUM_CHANNELS; ch++)
