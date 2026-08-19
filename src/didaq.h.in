@@ -8,7 +8,7 @@
 #define DIDAQ_VERSION_REV @@
 
 
-#define DIDAQ_NUM_BEAMS 10
+#define DIDAQ_NUM_BEAMS 12
 #define DIDAQ_NUM_COINC 2
 #define DIDAQ_NUM_CHANNELS 24
 #define DIDAQ_MAX_LEN 4096
