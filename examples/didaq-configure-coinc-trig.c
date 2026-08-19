@@ -133,7 +133,7 @@ int main (int nargs, char ** args)
   printf("Using Ch. thresholds of :\n");
   for(int i = 0; i<24; i++)
   {
-    printf(" Ch. %02d : Thresh %04d,", i, th.coin_thresholds[i]);
+    printf(" Ch. %02d : Th. %04d,", i, th.coin_thresholds[i]);
     if((i+1)%4==0) printf("\n");
   }
 
