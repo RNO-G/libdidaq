@@ -70,7 +70,7 @@ struct didaq_dev
   bool cached_phased_init;
   bool cached_coin_init;
   didaq_phased_thresholds_t cached_phased_thresholds;
-  didaq_phased_thresholds_t cached_coin_thresholds;
+  didaq_coin_thresholds_t cached_coin_thresholds;
 };
 
 
