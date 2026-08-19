@@ -86,16 +86,16 @@ int main (int nargs, char ** args)
       uint32_t E = ~M;
       s.coinc[1].channel_exclude_mask = E & (0xffffff);
     }
-    else if (strcmp(args[i], "-t") && i < nargs-1)
+    else if (!strcmp(args[i], "-t") && i < nargs-1)
     {
       int count = 0;
-      while (i < nargs) 
+      while (i < nargs-1) 
       {
         channel_thresh[count] = strtoul(args[++i], 0, 0);
         count++;
       }
     }
-    else if (strcmp(args[i], "-T") && i < nargs-1)
+    else if (!strcmp(args[i], "-T") && i < nargs-1)
     {
       uint32_t thresh = strtoul(args[++i], 0, 0);
       for(int j = 0; j<24; j++)
@@ -132,7 +132,10 @@ int main (int nargs, char ** args)
 
   printf("Using Ch. thresholds of :\n");
   for(int i = 0; i<24; i++)
-  printf("  Ch. %02d : Thresh %04d\n", i, th.coin_thresholds[0]);
+  {
+    printf(" Ch. %02d : Thresh %04d,", i, th.coin_thresholds[i]);
+    if((i+1)%4==0) printf("\n");
+  }
 
   sleep(25);
   didaq_read_scalers(dev, &scal);
