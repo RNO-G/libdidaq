@@ -333,7 +333,7 @@ int didaq_configure_trigger(didaq_dev_t * dev, const didaq_trigger_setup_t * tri
     dev->coin_ctl[i].clks_over_thresh = trig->coinc[i].clks_over_thresh;
     dev->coin_mask[i].include_mask = (~trig->coinc[i].channel_exclude_mask) & 0xffffff;
     ret = didaq_write_COIN_CTL(dev, i, &dev->coin_ctl[i]); CHECK(ret);
-    ret = didaq_write_COIN_MASKS(dev, i, &dev->coin_ctl[i].include_mask); CHECK(ret);
+    ret = didaq_write_COIN_MASK(dev, i, &dev->coin_mask[i].include_mask); CHECK(ret);
 
   }
 

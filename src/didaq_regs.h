@@ -65,10 +65,7 @@ int didaq_complete(didaq_dev_t * dev);
   REG(SCAL_RD       , 0x005C,    1,     0,   0,    didaq_reg_scaler_t)\
   REG(SCAL_SEL      , 0x005D,    1,     1,   0,    didaq_reg_scal_sel_t)\
   REG(CORE_TEMPS    , 0x0060,    5,     0,   0,    uint32_t)\
-  REG(COIN_MASK     , 0x0062,    2,     0,   0,    uint32_t)
-
-
-
+  REG(COIN_MASK     , 0x0062,    2,     0,   0,    didaq_reg_coin_trig_mask_t)
 
 #define DIDAQ_DEFINE_ENUM(NAME, ADDR, NADDR, RW, VAR, T) DIDAQ_##NAME,
 /** Enum of all didaq registers */
