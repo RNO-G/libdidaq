@@ -13,14 +13,20 @@ didaq_trigger_setup_t s = {
   .coinc =
   {
      {
-      .enable = true, .enable_readout =true,
+      .enable = false,
+      .enable_readout = false,
       .num_required = 2,
-      .coinc_window = 2
+      .coinc_window = 2,
+      .clks_over_thresh = 4,
+      .channel_exclude_mask = 0xffffff
     },
     {
-      .enable = true, .enable_readout =true,
+      .enable = false,
+      .enable_readout = false,
       .num_required = 2,
-      .coinc_window = 2
+      .coinc_window = 2,
+      .clks_over_thresh = 4,
+      .channel_exclude_mask = 0xffffff
     }
   }
 };
@@ -39,6 +45,20 @@ int main (int nargs, char ** args)
     {
       dev = args[++i];
     }
+        else if (!strcmp(args[i],"-e") && i < nargs-1)
+    {
+      enable = atoi(args[++i]);
+      if(enable & 1)
+      {
+        s.coinc[0].enable = true;
+        s.coinc[0].enable_readout = true;
+      }
+      if(enable & 2)
+      {
+        s.coinc[1].enable = true;
+        s.coinc[1].enable_readout = true;
+      }
+    }
     else if (!strcmp(args[i],"-w") && i < nargs-1)
     {
       int w = atoi(args[++i]);
@@ -51,18 +71,29 @@ int main (int nargs, char ** args)
       s.coinc[0].num_required = n;
       s.coinc[1].num_required = n;
     }
-    else if (!strcmp(args[i],"-M") && i < nargs-1)
+    else if (!strcmp(args[i], "-o") && i < nargs-1)
+    {
+      int n = atoi(args[++i]);
+      s.coinc[0].clks_over_thresh = n;
+      s.coinc[1].clks_over_thresh = n;
+    }
+    else if (!strcmp(args[i],"-M0") && i < nargs-1)
     {
       uint32_t M = strtoul(args[++i], 0, 0);
       uint32_t E = ~M;
-      s.coinc[0].channel_exclude_mask = E & (0xfff);
-      s.coinc[1].channel_exclude_mask = (E >> 12) & (0xfff);
+      s.coinc[0].channel_exclude_mask = E & (0xffffff);
+    }
+    else if (!strcmp(args[i],"-M1") && i < nargs-1)
+    {
+      uint32_t M = strtoul(args[++i], 0, 0);
+      uint32_t E = ~M;
+      s.coinc[1].channel_exclude_mask = E & (0xffffff);
     }
     else if (!strcmp(args[i],"-b") && i < nargs-1)
     {
       start_thresh = strtoul(args[++i], 0, 0);
     }
-    else if (!strcmp(args[i],"-e") && i < nargs-1)
+    else if (!strcmp(args[i],"-f") && i < nargs-1)
     {
       end_thresh = strtoul(args[++i], 0, 0);
     }
@@ -77,7 +108,7 @@ int main (int nargs, char ** args)
     else
     {
 
-      fprintf(stderr,"Usage:  didaq-coin-thresh-scan [ -d DEVICE ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [ -M MASK ] [-b BEGIN_THRESH ] [-e END_THRESH ] [-s STEP_THRESH]  [-t WAIT_TIME ] \n");
+      fprintf(stderr,"Usage:  didaq-coin-thresh-scan [ -d DEVICE ] [ -e enables ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [-o CLKS_OVER_THRESH ] [ -M0 MASK0 ] [ -M1 MASK0 ] [-b BEGIN_THRESH ] [-f END_THRESH ] [-s STEP_THRESH]  [-t WAIT_TIME ] \n");
 
       return 0;
     }

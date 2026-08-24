@@ -105,7 +105,7 @@ int main (int nargs, char ** args)
     }
     else
     {
-      fprintf(stderr,"Usage:  didaq-configure-coinc-trig [ -d DEVICE ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [-o CLKS_OVER_THRESH ] [ -M0 MASK0 ] [ -M1 MASK0 ] [ -T global_thresh ] [-t channel_thresholds (put last)]\n");
+      fprintf(stderr,"Usage:  didaq-configure-coinc-trig [ -d DEVICE ] [ -e enables ] [ -w COINC_WINDOW ] [ -n NUM_REQUIRED ] [-o CLKS_OVER_THRESH ] [ -M0 MASK0 ] [ -M1 MASK0 ] [ -T global_thresh ] [-t channel_thresholds (put last)]\n");
       return 0;
     }
   }
