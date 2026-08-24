@@ -31,15 +31,6 @@ int main (int nargs, char ** args)
     {
       dev = args[++i];
     }
-    else if (!strcmp(args[i],"-2"))
-    {
-      s.phased.divide_by_2 = true ;
-    }
-    else if (!strcmp(args[i],"-c"))
-    {
-      s.phased.require_consecutive_windows = true;
-    }
- 
     else if (!strcmp(args[i], "-B") && i < nargs-1)
     {
       uint32_t M = strtoul(args[++i], 0, 0);

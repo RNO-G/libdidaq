@@ -33,14 +33,6 @@ int main (int nargs, char ** args)
       s.phased.enable = true;
       s.phased.enable_readout = true;
     }
-    else if (!strcmp(args[i],"-2"))
-    {
-      s.phased.divide_by_2 = true ;
-    }
-    else if (!strcmp(args[i],"-c"))
-    {
-      s.phased.require_consecutive_windows = true;
-    }
     else if (!strcmp(args[i], "-B") && i < nargs-1)
     {
       uint32_t M = strtoul(args[++i], 0, 0);
@@ -74,7 +66,7 @@ int main (int nargs, char ** args)
     else
     {
 
-      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -e enable ] [ -2 divide_by_2 ] [ -c require_consecutive_windows ] [ -B meam mask ] [ -C channel_mask ] [ -t THRESH ] [ -T BEAM THRESH ] [ -f servo_frac ] \n");
+      fprintf(stderr,"Usage:  didaq-configure-phased-trig [ -d DEVICE ] [ -e enable ] [ -B meam mask ] [ -C channel_mask ] [ -t THRESH ] [ -T BEAM THRESH ] [ -f servo_frac ] \n");
 
       return 0;
     }

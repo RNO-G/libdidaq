@@ -155,11 +155,7 @@ typedef struct didaq_reg_phas_trig_ctl
 {
   uint32_t en_trig         : 1;
   uint32_t en_trig_to_data : 1;
-  uint32_t __pad0          : 2;
-  uint32_t req_consec_wins : 1;
-  uint32_t __pad1          : 3;
-  uint32_t divide_by_2     : 1;
-  uint32_t __pad2          : 3;
+  uint32_t __pad0          : 10;
   uint32_t channel_mask    : 4;
   uint32_t beam_mask       : 12;
 } didaq_reg_phas_trig_ctl_t;
